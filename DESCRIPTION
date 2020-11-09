@@ -1,0 +1,16 @@
+Package: SHClus
+Type: Package
+Title: Statistical Hierarchical Clustering
+Version: 1.0
+Date: 2020-09-24
+Encoding: UTF-8
+Author: Dalibor Krleža
+Maintainer: Dalibor Krleža <dalibor.krleza@fer.hr>
+Description: Clustering for outlier detection in big data streams. Contains Sigma-indexing structure for faster statistical model search.
+License: GPL (>= 3)
+Depends: R(>= 4.0.0), Rcpp, stream(>= 1.4-0), methods
+Suggests: Matrix, uuid, MASS, parallel, rlist, R.utils, ggplot2
+LinkingTo: Rcpp, RcppEigen
+RcppModules: SHCModule, SigmaIndexModule
+NeedsCompilation: yes
+SystemRequirements: C++14

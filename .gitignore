@@ -1,0 +1,9 @@
+doc
+Meta
+.Rproj.user
+.Rhistory
+*.o
+.RData
+.DS_Store
+*.csv
+*.so

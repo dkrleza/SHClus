@@ -1,0 +1,70 @@
+useDynLib(SHClus)
+importFrom("Rcpp", "evalCpp", "loadModule")
+importFrom("stream", "get_points", "reset_stream", "evaluate_callback", "get_assignment", "recheck_outlier", "get_microclusters", 
+           "get_microweights", "get_macroclusters", "get_macroweights", "microToMacro", "get_outlier_positions", "clean_outliers",
+           "evaluate_with_callbacks", "DSD_ReadCSV", "evaluate_cluster_with_callbacks")
+importFrom("grDevices", "dev.off", "pdf")
+importFrom("graphics", "axis", "barplot", "boxplot", "legend", "lines", "par")
+importFrom("methods", "new", "is")
+importFrom("stats", "aggregate", "time", "update")
+importFrom("utils", "download.file", "read.csv", "write.csv")
+export(
+#  "DSD_SHCGaussianGenerator",
+  "AgglomerationType",
+  "DriftType",
+  "SHC_TestCase_ClustersAndOutliers_SigmaIndex",
+  "SHC_TestCase_ClustersAndOutliers_SigmaIndex_Theorems",
+  "SHC_TestCase_Sensors_SigmaIndex",
+  "SHC_TestCase_Sensors_SigmaIndex_Display",
+  "DSC_SHC.behavioral",
+  "DSC_SHC.man",
+  "SHCEvalCallback",
+  "prepareSensorDataset",
+  "stream.SHC",
+  "stream.SHC.clone",
+  "stream.SHC.man",
+  "SigmaIndex",
+  "addPopulation",
+  "addDataPoints",
+  "addDataPointsInc",
+  "queryDataPoints",
+  "getTotalPopulationNumber",
+  "print",
+  "getPopulations",
+  "convertFromDSD",
+  "removePopulation",
+  "resetStatistics",
+  "getHistogram",
+  "getStatistics"
+)
+
+S3method(get_points, DSD_SHCGaussianGenerator)
+S3method(reset_stream, DSD_SHCGaussianGenerator)
+S3method(plot, DSD_SHCGaussianGenerator)
+
+S3method(get_stats, DSC_SHC)
+S3method(get_microclusters, DSC_SHC)
+S3method(get_microweights, DSC_SHC)
+S3method(get_macroclusters, DSC_SHC)
+S3method(get_macroweights, DSC_SHC)
+S3method(microToMacro, DSC_SHC)
+S3method(get_assignment, DSC_SHC)
+S3method(get_outlier_positions, DSC_SHC)
+S3method(recheck_outlier, DSC_SHC)
+S3method(clean_outliers, DSC_SHC)
+S3method(plot, DSC_SHC)
+S3method(getHistogram, DSC_SHC)
+
+S3method(evaluate_callback, SHCEvalCallback)
+
+S3method(addPopulation, SigmaIndex)
+S3method(addDataPoints, SigmaIndex)
+S3method(addDataPointsInc, SigmaIndex)
+S3method(queryDataPoints, SigmaIndex)
+S3method(getTotalPopulationNumber, SigmaIndex)
+S3method(print, SigmaIndex)
+S3method(getPopulations, SigmaIndex)
+S3method(removePopulation, SigmaIndex)
+S3method(resetStatistics, SigmaIndex)
+S3method(getHistogram, SigmaIndex)
+S3method(getStatistics, SigmaIndex)

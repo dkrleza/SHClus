@@ -1,0 +1,613 @@
+%\VignetteIndexEntry{Sigma-Index}
+\documentclass[nojss]{jss}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+\usepackage{mathptmx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+
+\author{
+Dalibor Krleža\\University of Zagreb
+}
+
+\title{Organizing Graph Structure for\\Statistical Neighborhood Search Optimization}
+
+\Plainauthor{Dalibor Krleža}
+\Plaintitle{Organizing Graph Structure for Statistical Neighborhood Search Optimization}
+\Shorttitle{The $\Sigma$-index}
+
+\Abstract{Statistical inference and classification allow us to determine the outcome of an input random variable in a set of statistical distributions. Such capability is used by various modern computing solutions and algorithms, such as statistical clustering algorithms. Statistical classification by utilizing statistical distance is computationally complex and requires optimized search methods to reduce unnecessary computations. The existing indexing data structures, such as B-trees, R-trees, M-trees are designed for organizing classes into containing subspaces, which is not applicable to organize statistical distributions when using statistical distance for the classification, as it tends to be relative with respect to each statistical distribution.
+In this paper, an statistical organizing graph structure named $\Sigma$-index is proposed. The $\Sigma$-index can be used for organizing statistical distributions to reduce the time needed for the statistical classification. It organizes statistical distributions based on the relative statistical distance and relationship among them, which consequently reduces the number of tested distributions needed to determine the outcome of the independent variable. The $\Sigma$-index was applied on an existing statistical clustering algorithm, to demonstrate the computation reduction between the proposed $\Sigma$-index and na\"ive sequential approach.}
+
+\Keywords{Indices, Statistical classification, Clustering, Databases}
+\Plainkeywords{Indices, Statistical classification, Clustering, Databases}
+
+\Address{Dalibor Krleža\\
+Deparment of Applied Computing\\
+Faculty of Electrical Engineering and Computing\\
+University of Zagreb\\
+Unska 3\\
+10000 Zagreb, Republic of Croatia\\
+E-mail: \email{dalibor.krleza@fer.hr}
+}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+\section{Introduction}{
+
+Statistical inference and classification is a proces of determining a belonging statistical distribution for an input (tested) observation (data point). To determine belonging statistcal distribution, we have multiple methods at disposal, such as the maximum likelihood estimation (MLE) principle \citep{rossi2018mathematical} or Mahalanobis distance (statistical distance) \citep{mahalanobis1936generalized}, correlated to the MLE principle. Since we use the Mahalanobis distance in the Statistical Hierarchical Clustering algorithm, we continue to use this approach here. The Mahalanobis distance
+\begin{equation}
+\begin{split}
+d_{M}(X, f_{X_i}) = \sqrt{[X - \mu_i]^{\top} \Sigma_i^{-1} [X - \mu_i]}
+\end{split}
+\label{eq:statistical_distance}
+\end{equation}
+is a transformation between Euclidean space and an unidimensional space $M_i = \mathbb{R}^1$. Reverse transformation for any $s \in M_i$ is a hyper-surface in the Euclidean space. If we have a space comprising $N$ statistical distributions, this will form $\mathcal{M}=\{M_1, ..., M_N\}$ transformed unidimensional spaces characterized by their centroids and covariance matrices. These unidimensional spaces are disjunct and independent, and cannot be correlated through the originating Euclidean space. Any known organizing trees, such as R-trees \citep{guttman1984r} or M-trees \citep{ciaccia1997m}, cannot be used as they require child nodes to represent a subspace of the parent node.\\
+
+In a na\"ive attempt to perform the statistical classification, we need to calculate the Mahalanobis distance to an input observation $X$ for each statistical distribution in the space, i.e., $N$ calculations for $|\mathcal{M}|=N$. Knowing that each Mahalanobis distance calculation is costly, we propose the $\Sigma$-index as an organizing structure. The $\Sigma$-index is a probabilistic-statistic directed acyclic graph (DAG) that helps to speed up the statistical classification by reducing the number of needed Mahalanobis distance calculations.\\
+
+The $\Sigma$-index has a structure that respects the following rules:
+\begin{itemize}
+  \item There is a ROOT node, which is the starting point for all $\Sigma$-index queries. All other nodes represent statistical distributions, having a centroid ($\mu$), a covariance matrix ($\Sigma$ or $S=\Sigma^{-1}$) and a number of population elements ($\mathcal{P}$).
+  \item $\Sigma$-index is a DAG, defined as $G_{\Sigma}=N_{\Sigma} \times E_{\Sigma}$. Cycles in the $\Sigma$-index are strictly forbidden. One node can have multiple parents.
+  \item Each parent node must have more or equal population elements to all child nodes.
+$$\forall e=(n_i,n_j) \in E_{\Sigma} : \mathcal{P}(n_i)>1, \mathcal{P}(n_j)>1 \mathcal{P}(n_i) > \mathcal{P}(n_j)$$
+        Only outliers can be connected to eachother regardless to the population elements, respecting that there are          not closed cycled in DAG.
+$$\forall e=(n_i,n_j) \in E_{\Sigma} : \mathcal{P}(n_i)=1, \mathcal{P}(n_j)=1$$
+        This creates a probablistically structured DAG, having populations with more elements closer to the top of the         DAG. This means that the probability of classification is
+$$\forall e=(n_i,n_j) \in E_{\Sigma} : p(n_i) \geq p(n_j)$$
+        which directly contributes to the computation cost reduction.
+  \item An edge $e \in E_{\Sigma}$ can be formed between statistical distributions whose centroids are closer than a          thershold $\theta_n$. Respecting the probabilistic distribution, we can define
+$$\forall e=(n_i,n_j) \in E_{\Sigma} : p(n_i) \geq p(n_j), d_{M}(\mu(n_j), n_i) \leq \theta_n$$
+        All nodes that have no parent statistical distributions are connected to the ROOT node.
+\end{itemize}
+
+\subsection{Querying}
+
+The $\Sigma$-index query algorithm is an extended DFS algorithm \citep{harris2008combinatorics}. The algorithm notes already visited nodes, is recursive and descends to the child nodes respecting the following rules:
+\begin{enumerate}
+  \item If the input observation $X$ is within the neighborhood distance ($\theta_n$) from some of the unvisited child nodes, we descend to these child nodes in the following recursive calls. If the input observation $X$ is within the neighborhood distance ($\theta_n$) from some of the \textbf{unvisited} parent nodes, we include these parent nodes in the following recursive calls.
+  \item If the input observation $X$ is not in the neighborhood distance to any of the unvisited child or parent nodes, we descend down to all child nodes, starting from the statistically closest child node.
+  \item We stop performing descdending if we have some classification results and the input observation $X$ is not in the neighborhood distance of none of the child nodes.
+  \item We stop preforming the recursive calls if one the previous recursive calls returned classification results.
+\end{enumerate}
+
+The pseudocode of the query algorithm is
+\begin{algorithm}
+	\caption{The $\Sigma$-index query function}
+	\label{alg:query}
+	\begin{algorithmic}[1]
+		\Function{DFS\_QUERY}{$X,n,v,r,G_{\Sigma}$}
+			\State{$l_1 \leftarrow \{\}, l_2 \leftarrow \{\}$}
+			\For{$(n,n_c) \in E_{\Sigma}(G_{\Sigma})$}
+				\If{$(n_c,\cdot) \notin v$}
+					\State{$d=d_M(X,n_c)$}
+					\State{$v_1 \leftarrow (n_c,d), v \leftarrow v \cup \{n_c\}$}
+					\If{$d \leq \theta_n$}
+						\State{$l_1 \leftarrow l_1 \cup \{v_1\}, r \leftarrow r \cup \{n_c\}$}
+					\Else
+						\State{$l_2 \leftarrow l_2 \cup \{v_1\}$}
+					\EndIf
+				\EndIf
+			\EndFor
+			\For{$(n_p,n) \in E_{\Sigma}(G_{\Sigma})$}
+				\If{$(n_p,\cdot) \notin v$}
+					\State{$d=d_M(X,n_p)$}
+					\State{$v_1 \leftarrow (n_p,d), v \leftarrow v \cup \{n_p\}$}
+					\If{$d \leq \theta_n$}
+						\State{$l_1 \leftarrow l_1 \cup \{v_1\}, r \leftarrow r \cup \{n_p\}$}
+					\EndIf
+				\EndIf
+			\EndFor
+			\If{$l_1 \neq \emptyset$}
+				\State{$l_3 \leftarrow$ sort ascending$(l_1)$}
+			\Else
+				\If{$r \neq \emptyset$} \Return{$(r,v)$} \EndIf
+				\State{$l_3 \leftarrow$ sort ascending$(l_2)$}
+			\EndIf
+			\For{$(n_{DFS},d_{DFS}) \in l_3$}
+				\State{$(r,v) \leftarrow $DFS\_QUERY$(X,n_{DFS},v,r,G_{\Sigma})$}
+				\If{$(l_1=\emptyset \vee n=root) \wedge r\neq \emptyset$}
+					\Return{$(r,v)$}
+				\EndIf
+			\EndFor
+		\Return{$(r,v)$}
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+
+where $X$ is the input observation, $n$ is the current node (ROOT for the first call), $v$ is the set of visited nodes, $r$ is the classification resulting set, and $G_{\Sigma}$ is the $\Sigma$-index DAG.
+
+\begin{figure} \centering
+\begin{minipage}[b]{.6\linewidth} \centering
+\includegraphics[width=\linewidth]{Fig3}
+\\(a)
+\end{minipage}\\
+\begin{minipage}[b]{.7\linewidth} \centering
+\includegraphics[width=\linewidth]{Fig4}
+\\(b)
+\end{minipage}
+\caption{A synthetic example of the $\Sigma$-index. Shown as (a) a DAG structure and as (b) spatially as statistical distributions.}
+\label{fig:si_example} \end{figure}
+
+The example in Figure \ref{fig:si_example} shows a synthetic example of the $\Sigma$-index structure. Figure \ref{fig:si_shc} shows the $\Sigma$-index DAG structure after the statistical classification of 40000 data points by the SHC algorithm.
+
+\begin{figure}
+\centering
+\includegraphics[width=.95\linewidth]{RL_example}
+\caption{A $\Sigma$-index DAG as the result of the SHC classification.}
+\label{fig:si_shc}
+\end{figure}
+
+
+\section{Usage}
+\subsection{Manual index building}
+
+First, we create an empty $\Sigma$-index with initial thresholds
+<<>>=
+library(SHClus)
+si <- SigmaIndex(theta = 3.2, neighborhood = 9.6)
+@
+In this case, we set a smaller surrounding in the neighborhood $\theta_n=9.6$ to be the classification distance, i.e., $\theta_c=3.2$. The initialized object has now only the ROOT node.
+Next, we manually add some statistical distributions. The covariance matrix of the added statistical distribution must be invertible, as the $\Sigma$-index is inverting the covariance matrix before use.
+<<>>=
+covariance1 <- matrix(data=c(0.8, 0, 0, 0.8), nrow=2, ncol=2)
+covariance1
+addPopulation(si, "1", c(0.5,0.5), covariance1, 800)
+covariance2 <- matrix(data=c(0.5, 0, 0, 0.5), nrow=2, ncol=2)
+addPopulation(si, "2", c(7,0.5), covariance2, 500)
+covariance3 <- matrix(data=c(0.4, 0, 0, 0.4), nrow=2, ncol=2)
+addPopulation(si, "3", c(3.5,10.0), covariance3, 400)
+@
+and we add some outliers
+<<>>=
+out_covariance <- matrix(data=c(0.3, 0, 0, 0.3), nrow=2, ncol=2)
+addPopulation(si, "4", c(8.0,6.2), out_covariance, 1)
+addPopulation(si, "5", c(0.5,15.0), out_covariance, 1)
+@
+\begin{figure}
+\centering
+\includegraphics[width=.4\linewidth]{RL_example2}
+\caption{A $\Sigma$-index DAG as the result of the manual creation.}
+\label{fig:si_manual}
+\end{figure}
+Figure~\ref{fig:si_manual} represents the $\Sigma$-index for the previous manual example. We can retrieve the total number of nodes in the $\Sigma$-index DAG by using
+<<>>=
+getTotalPopulationNumber(si)
+@
+Additionally, we can obtain back details for a specific statistical distribution
+<<>>=
+pop <- getPopulations(si)
+outlier <- pop$"4"
+outlier$mean
+outlier$icovariance
+@
+
+\subsubsection{Querying}
+Querying is done the following way
+<<>>=
+query_data <- data.frame(X=c(0.37,6.5,8.05),Y=c(0.505,0.4,6.3))
+query_data
+res <- queryDataPoints(si, query_data)
+@
+The first data point
+<<>>=
+unlist(res[[1]]$classified)
+unlist(res[[1]]$neighborhood)
+@
+and the results are the opposite for the second data point
+<<>>=
+unlist(res[[2]]$classified)
+unlist(res[[2]]$neighborhood)
+@
+The results are immediatelly indicating the Mahalanobis distance from the centroid of the \textit{classified} or \textit{neighborhood} statistical distributions. One query can return multiple statistical populations in either \textit{classified} or \textit{neighborhood} category. For example
+<<>>=
+res <- queryDataPoints(si, c(3.75,0.5))
+unlist(res[[1]]$classified)
+unlist(res[[1]]$neighborhood)
+@
+\subsubsection{Statistics}
+We can collect statistics for each query call. Before the query, we can reset statistical counters by using
+<<>>=
+resetStatistics(si)
+@
+Then we can initiate the query
+<<>>=
+res <- queryDataPoints(si, c(0.9,0.7))
+unlist(res)
+@
+and obtain the statistical counters
+<<>>=
+unlist(getStatistics(si))
+@
+We obtained only 20\% computational cost reduction. The reason for this is small, shallow and interconnected $\Sigma$-index DAG. If we move outlier \code{4} away from the population \code{2}, we gain some additional comp. cost reduction.
+<<>>=
+si <- SigmaIndex(theta = 3.2, neighborhood = 9.6)
+covariance1 <- matrix(data=c(0.8, 0, 0, 0.8), nrow=2, ncol=2)
+addPopulation(si, "1", c(0.5,0.5), covariance1, 800)
+covariance2 <- matrix(data=c(0.5, 0, 0, 0.5), nrow=2, ncol=2)
+addPopulation(si, "2", c(7,0.5), covariance2, 500)
+covariance3 <- matrix(data=c(0.4, 0, 0, 0.4), nrow=2, ncol=2)
+addPopulation(si, "3", c(3.5,10.0), covariance3, 400)
+out_covariance <- matrix(data=c(0.3, 0, 0, 0.3), nrow=2, ncol=2)
+addPopulation(si, "4", c(6.5,15.0), out_covariance, 1)
+addPopulation(si, "5", c(0.5,15.0), out_covariance, 1)
+res <- queryDataPoints(si, c(0.9,0.7))
+unlist(getStatistics(si))
+@
+
+\subsubsection{Histogram}
+
+Finally, the $\Sigma$-index can statically calculate its ability to reduce computational costs. This is shared through a computational cost reduction histogram.
+<<>>=
+hist <- getHistogram(si)
+hist
+@
+<<si1, fig=TRUE, include=FALSE, echo=FALSE, width=3, height=4>>=
+par(mar=c(5, 4, 1, 1) + 0.1)
+barplot(unname(hist[1,]), cex.names=.75, ylab="Density", xlab="Comp. cost reduction (%)", space=0, beside=T)
+axis(side=1,at=c(0,20,40,60,80,100))
+@
+\begin{figure}
+\centering
+\includegraphics[width=.4\linewidth]{SigmaIndex-si1}
+\caption{A $\Sigma$-index computational cost reduction histogram.}
+\label{fig:si_hist1}
+\end{figure}
+Figure~\ref{fig:si_hist1} shows the distribution of the
+<<>>=
+sum(hist)
+@
+population elements through the computational cost reduction. We can see that 402 elements belong to the 20\% reduction bin and 1300 elements belong to the 40\% reduction bin. We can expect that most of the future query hits will have 40\% of the computational cost reduction.
+
+\subsection{Population update} \label{sec:update}
+
+We can update registered populations by adding observations to them. Update by adding one observation is done on the inverse covariance matrix of the population using Sherman-Woodbury-Morrison formula. Adding one observation would probably not change the updated population significantly to affect the $\Sigma$-index DAG. On the other hand, significant update of any population might. Therefore, we differentiate two kind of updates.
+
+\subsubsection{The complete update}
+
+The complete update is done in two steps:
+\begin{enumerate}
+  \item Updating the population by adding new observations
+  \item Updating the $\Sigma$-index DAG by examining the statistical relationship between the updated population and \textbf{ALL OTHER} populations.
+\end{enumerate}
+
+We create 2 new observations as
+<<>>=
+new_observ <- data.frame(X=c(0.6,6.9),Y=c(0.4,0.55))
+new_observ
+@
+and then we add them to populations \code{"1"} and \code{"3"}
+<<>>=
+ids <- c("1","3")
+addDataPoints(si, ids, new_observ)
+@
+
+Calling the method \code{addDataPoint} will do the complete update for each observation. This is quite costly, since this does the \textit{sequential scan} for each added observation.
+
+\subsubsection{Incremental update}
+
+In a streamlined process, we usually perform queries before we decide to update some of the populations. Or to create outliers. Doing the query, we already did the calculations for the input observations, so we know their neighborhood. Using this information, we can update only portions of the $\Sigma$-index DAG, without any additional computation costs. For this, we need to perform a query first, and then to use these results to update the $\Sigma$-index DAG. The incremental update takes the closest queried population to be the incrementally updated population. When using the incremental update, it is best to do it observation by observation, so that updates affect the subsequent queries.
+The incremental update is done in two steps:
+\begin{enumerate}
+  \item Querying for an observation classification
+  \item Updating the $\Sigma$-index DAG by providing the neighborhood results in the previously perfomed query, which is used to update only these populations, without new Mahalanobis distance calculations.
+\end{enumerate}
+<<>>=
+new_observ <- data.frame(X=c(0.62,6.91),Y=c(0.41,0.551))
+new_observ
+for(r in 1:nrow(new_observ)) {
+  query_res <- queryDataPoints(si, new_observ[r,])
+  addDataPointsInc(si, new_observ[r,], query_res)
+}
+@
+
+The advantage of such approach is that we spend only those computation needed to perform the query.\\
+On the other hand, there is a side-effect that can be caused by constant incremental updates. At some point, we can have two disjunct vertical paths having populations from the same nighborhood.
+\begin{figure} \centering
+\begin{minipage}[b]{.40\linewidth} \centering
+\includegraphics[width=\linewidth]{Fig_unbalanced}
+\\(a)
+\end{minipage}
+\begin{minipage}[b]{.40\linewidth} \centering
+\includegraphics[width=\linewidth]{Fig_balanced}
+\\(b)
+\end{minipage}
+\caption{Unbalanced (a) and balanced (b) $\Sigma$-index DAG.}
+\label{fig:si_balancing} \end{figure}
+
+Figure~\ref{fig:si_balancing}a shows such a situation. We have two vertical disjunct vertical paths, sharing three populations in the same neighborhood. However, the query algorithm would find only two populations because of the \textbf{incomplete and incorrect} $\Sigma$-index DAG. The subsequently following incremental update will not correct this issue, since the third population will never appear in the query results. Such $\Sigma$-index DAG is considered for unbalanced and must be corrected by performing a complete update on one of the three neighbor populations.\\
+To detect such situation we have introduced a guarding rule, which, when satisfied, signals that a complete update must be done instead of an incremental update.\\
+However, checking the balancing rule adds additional costs in each $\Sigma$-index DAG update. For that reason we introduced an additional logical flag \code{balanced} in the $\Sigma$-index constructor.
+
+<<>>=
+si2 <- SigmaIndex(theta = 3.2, neighborhood = 9.6, balance = TRUE)
+@
+
+This will always result with a correct $\Sigma$-index DAG that can be seen in Figure~\ref{fig:si_balancing}b. Unbalanced $\Sigma$-index DAG will consequently result in lower precision, which can be corrected by balacing it. Drop in precision because of the incorrect structure caused by the incremental updating is minor, while the increase in the update time for checking the balancing rule is quite substantial. Nevertheless, the total amount of time is still lower than the \textit{sequential scan} approach.
+
+\subsection{Complex initialization} \label{sec:dsd}
+
+We can use data stream generators from the \pkg{stream} package to generate a synthetic case that can be directly converted to the $\Sigma$-index. We generate a bigger number of clusters and outliers to make the example more complex. We generate definitions for 200000 observations in total.
+<<>>=
+library(stream)
+library(SHClus)
+set.seed(1000)
+#dsd <- DSD_Gaussians(k=40,o=40,separation_type="Mahalanobis",lim=c(0,150),
+#                     outlier_horizon=30000,variance_lim=8)
+dsd <- DSD_Gaussians(k=40,o=40,separation_type="Mahalanobis",lim=c(0,150),
+                     outlier_horizon=30000,variance_lim=8)
+n <- 200000
+@
+<<si2, fig=TRUE, include=FALSE, echo=FALSE>>=
+plot(dsd, n)
+@
+\begin{figure}
+\centering
+\includegraphics[width=.7\linewidth]{SigmaIndex-si2}
+\caption{A synthetic Gaussian example.}
+\label{fig:si_dsd}
+\end{figure}
+Figure~\ref{fig:si_dsd} shows a synthetic Gaussian example generated by the \code{DSD_Gaussians} data stream generator. We can convert definitions from such data stream generator into a $\Sigma$-index
+<<>>=
+si <- convertFromDSD(dsd, total_elements = n, theta = 3.2, 
+                     neighborhood = 9.6)
+@
+We can start by generating and querying the staring 200000 observations and obtaining the statistics for the query
+<<include=FALSE,echo=FALSE>>=
+options("scipen"=100, "digits"=4)
+@
+<<>>=
+reset_stream(dsd)
+resetStatistics(si)
+res1 <- queryDataPoints(si, get_points(dsd, n))
+stats1 <- getStatistics(si)
+unlist(stats1)
+@
+
+<<include=FALSE, echo=FALSE>>=
+hist1 <- getHistogram(si)
+reset_stream(dsd)
+si <- convertFromDSD(dsd, total_elements = n, theta = 3.2, 
+                     neighborhood = 6.4)
+res2 <- queryDataPoints(si, get_points(dsd, n))
+stats2 <- getStatistics(si)
+hist2 <- getHistogram(si)
+reset_stream(dsd)
+si <- convertFromDSD(dsd, total_elements = n, theta = 3.2, 
+                     neighborhood = 12.9)
+res3 <- queryDataPoints(si, get_points(dsd, n))
+stats3 <- getStatistics(si)
+hist3 <- getHistogram(si)
+@
+<<si3, fig=TRUE, include=FALSE, echo=FALSE, width=3, height=4>>=
+par(mar=c(6, 4, 1, 1) + 0.1)
+df1 <- data.frame('6.4'=stats2$computationCostReduction,
+                  '9.6'=stats1$computationCostReduction,
+                  '12.9'=stats3$computationCostReduction,check.names=F)
+mns <- colMeans(df1)
+df1 <- df1[,order(mns)]
+barplot(colMeans(df1), las=2, ylab="Comp. cost reduction (%)")
+@
+<<si4, fig=TRUE, include=FALSE, echo=FALSE, width=3, height=4>>=
+par(mar=c(5, 4, 1, 1) + 0.1)
+barplot(unname(hist2[1,]), ylab="Density", xlab="Comp. cost reduction (%)", space=0, beside=T, ylim=c(0,(max(mns)*1.1)))
+axis(side=1,at=c(0,20,40,60,80,100))
+@
+<<si5, fig=TRUE, include=FALSE, echo=FALSE, width=3, height=4>>=
+par(mar=c(5, 4, 1, 1) + 0.1)
+barplot(unname(hist1[1,]), ylab="Density", xlab="Comp. cost reduction (%)", space=0, beside=T)
+axis(side=1,at=c(0,20,40,60,80,100))
+@
+<<si6, fig=TRUE, include=FALSE, echo=FALSE, width=3, height=4>>=
+par(mar=c(5, 4, 1, 1) + 0.1)
+barplot(unname(hist3[1,]), ylab="Density", xlab="Comp. cost reduction (%)", space=0, beside=T)
+axis(side=1,at=c(0,20,40,60,80,100))
+@
+
+\begin{figure} \centering
+\begin{minipage}[b]{.40\linewidth} \centering
+\includegraphics[width=\linewidth]{SigmaIndex-si3}
+\\(a)
+\end{minipage}
+\begin{minipage}[b]{.40\linewidth} \centering
+\includegraphics[width=\linewidth]{SigmaIndex-si4}
+\\(b)
+\end{minipage}\\
+\begin{minipage}[b]{.40\linewidth} \centering
+\includegraphics[width=\linewidth]{SigmaIndex-si5}
+\\(c)
+\end{minipage}
+\begin{minipage}[b]{.40\linewidth} \centering
+\includegraphics[width=\linewidth]{SigmaIndex-si6}
+\\(d)
+\end{minipage}
+\caption{$\Sigma$-index computational cost reduction and histograms for $\theta_n \in \{6.4, 9.6, 12.9\}$.}
+\label{fig:si_ccrs} \end{figure}
+Using distinct neighborhood thresholds $\theta_n \in \{6.4,9.6,12.9\}$, we obtain different computational cost reductions. Figure~\ref{fig:si_ccrs} contains average comp. cost reduction for all three settings (a) and their histograms: $\theta_n=6.4$ (b), $\theta_n=9.6$ (c), $\theta_n=12.9$ (d). We can draw a conclusion that the comp. cost reduction gets higher with neighborhood threshold $\theta_n$. Such claim must be cross-verified with processing times for each of the setting in Figure~\ref{fig:si_ccrs}, as the overall processing time includes $\Sigma$-index updating times as well, which is also a limiting factor. Intuitively, the more interconnected $\Sigma$-index is, the higher update time should be. 
+
+\subsection{Using in the clustering processes}
+
+One of the applications of the $\Sigma$-index is to speed up the statistical clustering algorithms. The idea about creating the $\Sigma$-index originated from the SHC algorithm, where we identified Mahalanobis distance calculation as the most critical points of SHC, time-wise. The $\Sigma$-index implementation was added to SHC, where we could observe its behaviour. Unlike Section~\ref{sec:dsd}, in this scenario we are placing SHC between DSD and the $\Sigma$-index. SHC here is only using $\Sigma$-index to incrementally keep the statistical structures and relationships between them. It is worthwile to note that $\Sigma$-index being incrementally updated can keep up with the evolving nature of the concepts in SHC.\\
+
+We use the same data stream generator as in the previous example. Next, we create an SHC instance, where we have chosen to use the $\Sigma$-index, with neighborhood multiplier 3, which means $3*\theta_c$. For the setting \code{aggloType=AgglomerationType$NormalAgglomeration}, we have $\theta_c=3.2$.
+<<>>=
+reset_stream(dsd)
+shc_c <- DSC_SHC.man(2, 3.5, 0.9, cbVarianceLimit = 0, cbNLimit = 0, 
+                     decaySpeed = 0, sharedAgglomerationThreshold = 100,
+                     sigmaIndex = T, sigmaIndexNeighborhood = 3)
+@
+
+We can perform the evaluation of the SHC for the generated DSD as
+<<>>=
+evaluate(shc_c, dsd, n=30000, type="macro", measure=c("crand",
+                                                      "outlierjaccard"), 
+         single_pass_update=T)
+@
+
+and then retrieve statistics through SHC for the previously executed queries.
+<<>>=
+shc_c$RObj$getComputationCostReduction()
+@
+
+<<include=FALSE, echo=FALSE>>=
+n <- 100000
+reset_stream(dsd)
+c1 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = FALSE)
+c1$RObj$setPseudoOfflineCounter(500)
+res1 <- evaluate_with_callbacks(c1, dsd, n=n, measure = c("cRand", "queryTime", "updateTime", "processTime","nodeCount",  "computationCostReduction","OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()),single_pass_update=T, use_outliers=T)
+  
+reset_stream(dsd)
+c2 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 2)
+c2$RObj$setPseudoOfflineCounter(500)
+res2 <- evaluate_with_callbacks(c2, dsd, n=n, measure = c("cRand", "queryTime", "updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
+
+reset_stream(dsd)
+c3 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 3)
+c3$RObj$setPseudoOfflineCounter(500)
+res3 <- evaluate_with_callbacks(c3, dsd, n=n, measure = c("cRand", "queryTime","updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
+
+reset_stream(dsd)
+c4 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 4)
+c4$RObj$setPseudoOfflineCounter(500)
+res4 <- evaluate_with_callbacks(c4, dsd, n=n, measure = c("cRand", "queryTime","updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
+
+reset_stream(dsd)
+c5 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 3, balancedSigmaIndex = TRUE)
+c5$RObj$setPseudoOfflineCounter(500)
+res5 <- evaluate_with_callbacks(c5, dsd, n=n, measure = c("cRand", "queryTime","updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
+@
+<<si7,fig=TRUE,include=FALSE,echo=FALSE,width=3,height=4>>=
+hist2 <- getHistogram(c2)
+par(mar=c(5, 4, 1, 1) + 0.1)
+barplot(unname(hist2[1,]), cex.names=.75, ylab="Density", xlab="Comp. cost reduction (%)",space=0, beside=T)
+axis(side=1,at=c(0,20,40,60,80,100))
+@
+<<si8,fig=TRUE,include=FALSE,echo=FALSE,width=3,height=4>>=
+hist3 <- getHistogram(c3)
+par(mar=c(5, 4, 1, 1) + 0.1)
+barplot(unname(hist3[1,]), cex.names=.75, ylab="Density", xlab="Comp. cost reduction (%)",space=0, beside=T)
+axis(side=1,at=c(0,20,40,60,80,100))
+@
+<<si9,fig=TRUE,include=FALSE,echo=FALSE,width=3,height=4>>=
+hist4 <- getHistogram(c4)
+par(mar=c(5, 4, 1, 1) + 0.1)
+barplot(unname(hist4[1,]), cex.names=.75, ylab="Density", xlab="Comp. cost reduction (%)",space=0, beside=T)
+axis(side=1,at=c(0,20,40,60,80,100))
+@
+
+\begin{figure} \centering
+\begin{minipage}[b]{.30\linewidth} \centering
+\includegraphics[width=\linewidth]{SigmaIndex-si7}
+\\(a)
+\end{minipage}
+\begin{minipage}[b]{.30\linewidth} \centering
+\includegraphics[width=\linewidth]{SigmaIndex-si8}
+\\(b)
+\end{minipage}
+\begin{minipage}[b]{.30\linewidth} \centering
+\includegraphics[width=\linewidth]{SigmaIndex-si9}
+\\(c)
+\end{minipage}
+\caption{$\Sigma$-index histograms for neighborhood multipliers 2, 3, and 4.}
+\label{fig:si_shc_hists} \end{figure}
+
+Figure~\ref{fig:si_shc_hists} shows histograms for all three neighborhood multipliers: \code{sigmaIndexNeighborhood = 2} (a), sigmaIndexNeighborhood = 3 (b), and sigmaIndexNeighborhood = 4 (c).
+
+<<si-shc-crand,fig=TRUE,include=FALSE,echo=FALSE,width=3,height=4>>=
+par(mar=c(6.8, 4, 1, 1) + 0.1)
+df1 <- data.frame('SHC(seq.)'=res1$cRand,'SHC(nm=2)'=res2$cRand,
+                  'SHC(nm=3)'=res3$cRand,'SHC(nm=4)'=res4$cRand,
+                  'SHC(nm=3,bal)'=res5$cRand,check.names=F)
+mns <- colMeans(df1)
+df1 <- df1[,order(mns,decreasing=T)]
+boxplot(df1, las=2, ylab="Corrected Rand", ylim=c(0,1))
+@
+<<si-shc-qt,fig=TRUE,include=FALSE,echo=FALSE,width=3,height=4>>=
+par(mar=c(6, 4, 1, 1) + 0.1)
+df1 <- data.frame('SHC(seq.)'=res1$queryTime,'SHC(nm=2)'=res2$queryTime,
+                  'SHC(nm=3)'=res3$queryTime,'SHC(nm=4)'=res4$queryTime,
+                  'SHC(nm=3,bal)'=res5$queryTime,check.names=F)
+mns <- colMeans(df1)
+df1 <- df1[,order(mns)]
+barplot(colMeans(df1), las=2, cex.names=.85, ylab="Query time (ms)", ylim=c(0,(max(mns)*1.1)))
+@
+<<si-shc-nc,fig=TRUE,include=FALSE,echo=FALSE,width=3,height=4>>=
+par(mar=c(6, 4, 1, 1) + 0.1)
+df1 <- data.frame('SHC(seq.)'=res1$nodeCount,'SHC(nm=2)'=res2$nodeCount,
+                  'SHC(nm=3)'=res3$nodeCount,'SHC(nm=4)'=res4$nodeCount,
+                  'SHC(nm=3,bal)'=res5$nodeCount,check.names=F)
+mns <- colMeans(df1)
+df1 <- df1[,order(mns)]
+barplot(colMeans(df1), las=2, cex.names=.85, cex.axis=0.6, ylab="Nodes visited/calculated", ylim=c(0,(max(mns)*1.1)))
+@
+<<si-shc-ccr,fig=TRUE,include=FALSE,echo=FALSE,width=3,height=4>>=
+par(mar=c(6, 4, 1, 1) + 0.1)
+df1 <- data.frame('SHC(seq.)'=res1$computationCostReduction,'SHC(nm=2)'=res2$computationCostReduction,
+                  'SHC(nm=3)'=res3$computationCostReduction,'SHC(nm=4)'=res4$computationCostReduction,
+                  'SHC(nm=3,bal)'=res5$computationCostReduction,check.names=F)
+mns <- colMeans(df1)
+df1 <- df1[,order(mns)]
+barplot(colMeans(df1), las=2, cex.names=.85, ylab="Comp. cost reduction (%)", ylim=c(0,(max(mns)*1.1)))
+@
+<<si-shc-ut,fig=TRUE,include=FALSE,echo=FALSE,width=3,height=4>>=
+par(mar=c(6, 4, 1, 1) + 0.1)
+df1 <- data.frame('SHC(seq.)'=res1$updateTime,'SHC(nm=2)'=res2$updateTime,
+                  'SHC(nm=3)'=res3$updateTime,'SHC(nm=4)'=res4$updateTime,
+                  'SHC(nm=3,bal)'=res5$updateTime,check.names=F)
+mns <- colMeans(df1)
+df1 <- df1[,order(mns,decreasing=T)]
+barplot(colMeans(df1), las=2, cex.names=.85, ylab="Update time (ms)", ylim=c(0,(max(mns)*1.1)))
+@
+<<si-shc-pt,fig=TRUE,include=FALSE,echo=FALSE,width=3,height=4>>=
+par(mar=c(6, 4, 1, 1) + 0.1)
+df1 <- data.frame('SHC(seq.)'=res1$processTime,'SHC(nm=2)'=res2$processTime,
+                  'SHC(nm=3)'=res3$processTime,'SHC(nm=4)'=res4$processTime,
+                  'SHC(nm=3,bal)'=res5$processTime,check.names=F)
+mns <- colMeans(df1)
+df1 <- df1[,order(mns,decreasing=T)]
+barplot(colMeans(df1), las=2, cex.names=.85, ylab="Processing time (ms)", ylim=c(0,(max(mns)*1.1)))
+@
+
+\begin{figure} \centering
+\begin{minipage}[b]{.30\linewidth} \centering
+\includegraphics[width=\linewidth]{SigmaIndex-si-shc-crand}
+\\(a)
+\end{minipage}
+\begin{minipage}[b]{.30\linewidth} \centering
+\includegraphics[width=\linewidth]{SigmaIndex-si-shc-nc}
+\\(b)
+\end{minipage}
+\begin{minipage}[b]{.30\linewidth} \centering
+\includegraphics[width=\linewidth]{SigmaIndex-si-shc-ccr}
+\\(c)
+\end{minipage}\\
+\begin{minipage}[b]{.30\linewidth} \centering
+\includegraphics[width=\linewidth]{SigmaIndex-si-shc-qt}
+\\(d)
+\end{minipage}
+\begin{minipage}[b]{.30\linewidth} \centering
+\includegraphics[width=\linewidth]{SigmaIndex-si-shc-pt}
+\\(e)
+\end{minipage}
+\begin{minipage}[b]{.30\linewidth} \centering
+\includegraphics[width=\linewidth]{SigmaIndex-si-shc-ut}
+\\(f)
+\end{minipage}
+\caption{SHC comparative results between \textit{sequential scan} and $\Sigma$-index mode.}
+\label{fig:si_shc_comparative} \end{figure}
+
+Figure~\ref{fig:si_shc_comparative} shows the comparation between the \textit{sequential scan} approach and using $\Sigma$-index. In (a) we can see the corrected Rand for all five settings. There is no precision degradation when using $\Sigma$-index. In (b) we can see the number of statistical distributions for whose we needed to calculate the Mahalanobis distance. The worst case scenario when using the $\Sigma$-index requires less than for the \textit{sequential scan} approach. This pattern is inversely reflected in the computational cost reduction (c). We can see that the setting \code{sigmaIndexNeighborhood = 4} is slightly better than \code{sigmaIndexNeighborhood = 3}. Query and processing times in (d) and (e) follow the same pattern with some multiplier $C_1$, which depends on the clustering algorithm, SHC in this case. Finally, the update time (f) is obviously the highest in the setting \code{sigmaIndexNeighborhood = 4}, since the $\Sigma$-index DAG is the most interconnected of all settings. The obvious conclusion is that times relate as $query+update=processing+C_2$.
+
+We can compare balanced and and unbalanced setting \code{sigmaIndexNeighborhood = 3}, in Figure~\ref{fig:si_shc_comparative} to see the difference. In (a) we can see a specific drop in the precision when we start rising the neighborhood threshold $\theta_n$. However, it seems that balancing the $\Sigma$-index DAG solves this issue. In (b)-(d) we can see a minor imporovement from the unbalanced variant. However, in (e) we see a significant increase in update time, which does slighly affect the processing time (e).
+
+\bibliography{SHClus}
+
+\end{document}
