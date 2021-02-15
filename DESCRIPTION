@@ -2,7 +2,7 @@ Package: SHClus
 Type: Package
 Title: Statistical Hierarchical Clustering
 Version: 1.0
-Date: 2020-09-24
+Date: 2020-12-04
 Encoding: UTF-8
 Author: Dalibor Krleža
 Maintainer: Dalibor Krleža <dalibor.krleza@fer.hr>

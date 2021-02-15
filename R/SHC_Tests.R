@@ -1,29 +1,36 @@
 SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
   set.seed(1000)
-#  ds <- DSD_SHCGaussianGenerator(clusters = 50, outliers = 50, initPopulation = n, 
-#                                 cacheAndRepeat = TRUE, maxDimensionValues = c(150,150),
-#                                 generateVariableClusterPopulations = F,regenerateWithOverflow = FALSE)
-#
-  ds <- stream::DSD_Gaussians(k=50,o=50,separation_type="Mahalanobis",lim=c(0,180),
-                      outlier_horizon=30000,variance_lim=8)
+  #ds <- DSD_SHCGaussianGenerator(clusters = 50, outliers = 50, initPopulation = n, 
+  #                               cacheAndRepeat = TRUE, maxDimensionValues = c(80,80),
+  #                               regenerateWithOverflow = TRUE, theta = 2, 
+  #                               virtualVariance = 0.3)
+
+  ds <- stream::DSD_Gaussians(k=50,outliers=50,separation_type="Mahalanobis",
+                              separation=4,space_limit=c(0,150),variance_limit=8,
+                              outlier_options=list(outlier_horizon=n))
+  plot(ds,n)
+  
+  reset_stream(ds)
 
   print("#SHC-sequential")
-  c1 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = FALSE)
+  c1 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = FALSE,
+                           sharedAgglomerationThreshold = 100)
   setPseudoOfflineCounter(c1,500)
   res1 <- evaluate_with_callbacks(c1, ds, n=n, measure = c("cRand","queryTime","updateTime",
                                                            "processTime","nodeCount",
-                                                           "computationCostReduction"), 
+                                                           "computationCostReduction", "outlierjaccard"), 
                                   type="macro", callbacks=list(shc=SHCEvalCallback()), 
                                   single_pass_update=T, use_outliers=T)
   
   reset_stream(ds)
   
   print("#SHC-index1")
-  c2 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 2)
+  c2 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 2,
+                           sharedAgglomerationThreshold = 100)
   setPseudoOfflineCounter(c2,500)
   res2 <- evaluate_with_callbacks(c2, ds, n=n, measure = c("cRand","queryTime","updateTime",
                                                            "processTime","nodeCount",
-                                                           "computationCostReduction"), 
+                                                           "computationCostReduction","outlierjaccard"), 
                                   type="macro", callbacks=list(shc=SHCEvalCallback()), 
                                   single_pass_update=T, use_outliers=T)
   hist2 <- getHistogram(c2)
@@ -37,11 +44,12 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
   reset_stream(ds)
   
   print("#SHC-index2")
-  c3 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 3)
+  c3 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 3,
+                           sharedAgglomerationThreshold = 100)
   setPseudoOfflineCounter(c3,500)
   res3 <- evaluate_with_callbacks(c3, ds, n=n, measure = c("cRand","queryTime","updateTime",
                                                            "processTime","nodeCount",
-                                                           "computationCostReduction"), 
+                                                           "computationCostReduction","outlierjaccard"), 
                                   type="macro", callbacks=list(shc=SHCEvalCallback()), 
                                   single_pass_update=T, use_outliers=T)
   hist3 <- getHistogram(c3)
@@ -55,11 +63,12 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
   reset_stream(ds)
   
   print("#SHC-index3")
-  c4 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 4)
+  c4 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 4,
+                           sharedAgglomerationThreshold = 100)
   setPseudoOfflineCounter(c4,500)
   res4 <- evaluate_with_callbacks(c4, ds, n=n, measure = c("cRand","queryTime","updateTime",
                                                            "processTime","nodeCount",
-                                                           "computationCostReduction"), 
+                                                           "computationCostReduction","outlierjaccard"), 
                                   type="macro", callbacks=list(shc=SHCEvalCallback()), 
                                   single_pass_update=T, use_outliers=T)
   hist4 <- getHistogram(c4)
@@ -70,59 +79,49 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
   axis(side=1,at=c(0,20,40,60,80,100))
   dev.off()
   
-  reset_stream(ds)
-  
-  print("#SHC-balanced")
-  c5 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 3, balancedSigmaIndex = T)
-  setPseudoOfflineCounter(c5,500)
-  res5 <- evaluate_with_callbacks(c5, ds, n=n, measure = c("cRand","queryTime","updateTime",
-                                                           "processTime","nodeCount",
-                                                           "computationCostReduction"), 
-                                  type="macro", callbacks=list(shc=SHCEvalCallback()), 
-                                  single_pass_update=T, use_outliers=T)
-  hist5 <- getHistogram(c5)
-  pdf("./inst/shc_idx_bal_histogram.pdf",  width=3.2, height=4)
-  par(mar=c(5, 4, 1, 1) + 0.1)
-  barplot(unname(hist5[1,]), cex.names=.75, ylab="Density", xlab="Comp. cost reduction (%)", 
-          space=0, beside=T)
-  axis(side=1,at=c(0,20,40,60,80,100))
-  dev.off()
-  
   pdf("./inst/st_clusout_crand.pdf",  width=3, height=4)
   par(mar=c(6.8, 4, 1, 1) + 0.1)
   df1 <- data.frame('SHC sequential'=res1$cRand,'SHC index 1'=res2$cRand,
-                    'SHC index 2'=res3$cRand,'SHC index 3'=res4$cRand,
-                    'SHC balanced'=res5$cRand,check.names=F)
+                    'SHC index 2'=res3$cRand,'SHC index 3'=res4$cRand,check.names=F)
   mns <- colMeans(df1)
   df1 <- df1[,order(mns,decreasing=T)]
   boxplot(df1, las=2, ylab="Corrected Rand", ylim=c(0,1))
   dev.off()
   
-  pdf("./inst/st_clusout_querytimes.pdf",  width=3, height=4)
-  par(mar=c(6, 4, 1, 1) + 0.1)
+  pdf("./inst/st_clusout_oji.pdf",  width=3, height=4)
+  par(mar=c(6.8, 4, 1, 1) + 0.1)
+  df1 <- data.frame('SHC sequential'=res1$OutlierJaccard,'SHC index 1'=res2$OutlierJaccard,
+                    'SHC index 2'=res3$OutlierJaccard,'SHC index 3'=res4$OutlierJaccard,check.names=F)
+  mns <- colMeans(df1)
+  df1 <- df1[,order(mns,decreasing=T)]
+  boxplot(df1, las=2, ylab="Outlier Jaccard", ylim=c(0,1))
+  dev.off()
+  
+  pdf("./inst/st_clusout_querytimes.pdf",  width=1.5, height=2.5)
+  #png("./inst/st_clusout_querytimes.png",  width=1.5, height=2.5)
+  par(mar=c(4.2, 3, 0.2, 0.2))
   df1 <- data.frame('SHC sequential'=res1$queryTime,'SHC index 1'=res2$queryTime,
-                    'SHC index 2'=res3$queryTime,'SHC index 3'=res4$queryTime,
-                    'SHC balanced'=res5$queryTime,check.names=F)
+                    'SHC index 2'=res3$queryTime,'SHC index 3'=res4$queryTime,check.names=F)
   mns <- colMeans(df1)
   df1 <- df1[,order(mns)]
-  barplot(colMeans(df1), las=2, cex.names=.85, ylab="Query time (ms)", ylim=c(0,(max(mns)*1.1)))
+  barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=0.8, ylab="Query time (ms)", 
+          ylim=c(0,(max(mns)*1.1)), mgp=c(1.9,0.7,0))
   dev.off()
   
   pdf("./inst/st_clusout_nc.pdf",  width=3, height=4)
   par(mar=c(6, 4, 1, 1) + 0.1)
   df1 <- data.frame('SHC sequential'=res1$nodeCount,'SHC index 1'=res2$nodeCount,
-                    'SHC index 2'=res3$nodeCount,'SHC index 3'=res4$nodeCount,
-                    'SHC balanced'=res5$nodeCount,check.names=F)
+                    'SHC index 2'=res3$nodeCount,'SHC index 3'=res4$nodeCount,check.names=F)
   mns <- colMeans(df1)
   df1 <- df1[,order(mns)]
-  barplot(colMeans(df1), las=2, cex.names=.85, cex.axis=0.6, ylab="Nodes visited/calculated", ylim=c(0,(max(mns)*1.1)))
+  barplot(colMeans(df1), las=2, cex.names=.85, cex.axis=0.6, ylab="Nodes visited/calculated", 
+          ylim=c(0,(max(mns)*1.1)))
   dev.off()
   
   pdf("./inst/st_clusout_ccr.pdf",  width=3, height=4)
   par(mar=c(6, 4, 1, 1) + 0.1)
   df1 <- data.frame('SHC sequential'=res1$computationCostReduction,'SHC index 1'=res2$computationCostReduction,
-                    'SHC index 2'=res3$computationCostReduction,'SHC index 3'=res4$computationCostReduction,
-                    'SHC balanced'=res5$computationCostReduction,check.names=F)
+                    'SHC index 2'=res3$computationCostReduction,'SHC index 3'=res4$computationCostReduction,check.names=F)
   mns <- colMeans(df1)
   df1 <- df1[,order(mns)]
   barplot(colMeans(df1), las=2, cex.names=.85, ylab="Comp. cost reduction (%)", ylim=c(0,(max(mns)*1.1)))
@@ -131,8 +130,7 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
   pdf("./inst/st_clusout_ut.pdf",  width=3, height=4)
   par(mar=c(6, 4, 1, 1) + 0.1)
   df1 <- data.frame('SHC sequential'=res1$updateTime,'SHC index 1'=res2$updateTime,
-                    'SHC index 2'=res3$updateTime,'SHC index 3'=res4$updateTime,
-                    'SHC balanced'=res5$updateTime,check.names=F)
+                    'SHC index 2'=res3$updateTime,'SHC index 3'=res4$updateTime,check.names=F)
   mns <- colMeans(df1)
   df1 <- df1[,order(mns,decreasing=T)]
   barplot(colMeans(df1), las=2, cex.names=.85, ylab="Update time (ms)", ylim=c(0,(max(mns)*1.1)))
@@ -141,8 +139,7 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
   pdf("./inst/st_clusout_pt.pdf",  width=3, height=4)
   par(mar=c(6, 4, 1, 1) + 0.1)
   df1 <- data.frame('SHC sequential'=res1$processTime,'SHC index 1'=res2$processTime,
-                    'SHC index 2'=res3$processTime,'SHC index 3'=res4$processTime,
-                    'SHC balanced'=res5$processTime,check.names=F)
+                    'SHC index 2'=res3$processTime,'SHC index 3'=res4$processTime,check.names=F)
   mns <- colMeans(df1)
   df1 <- df1[,order(mns,decreasing=T)]
   barplot(colMeans(df1), las=2, cex.names=.85, ylab="Processing time (ms)", ylim=c(0,(max(mns)*1.1)))
@@ -150,45 +147,33 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
 }
 
 SHC_TestCase_ClustersAndOutliers_SigmaIndex_Theorems <- function() {
-  set.seed(0)
-  ds <- DSD_SHCGaussianGenerator(clusters = 5, outliers = 0, initPopulation = 1000, 
-                                 cacheAndRepeat = TRUE, maxDimensionValues = c(50,50),
-                                 generateVariableClusterPopulations = TRUE, theta=10,
-                                 maxVariance = 1.5, checkOverlapping_MD = T)
+  sigma <- matrix(data=c(1,0,0,1),nrow=2,ncol=2)
+  mu <- list(P1=c(20,20), P2=c(27,20), P3=c(20,30), P4=c(5,20), P5=c(20,5))
+  si1 <- SigmaIndex(theta = 3.2, neighborhood = 6.4)
+  for(mu_n in names(mu)) addPopulation(si1,mu_n,mu[[mu_n]],sigma,200)
+  si2 <- SigmaIndex(theta = 3.2, neighborhood = 9.6)
+  for(mu_n in names(mu)) addPopulation(si2,mu_n,mu[[mu_n]],sigma,200)
+  si3 <- SigmaIndex(theta = 3.2, neighborhood = 12.9)
+  for(mu_n in names(mu)) addPopulation(si3,mu_n,mu[[mu_n]],sigma,200)
   
-  print("#SHC, N=2")
-  c1 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 2)
-  reset_stream(ds)
-  update(c1, ds, n=1000, use_outliers=T)
-  
-  hist <- getHistogram(c1)
-  pdf("./inst/st_theorem_shc1_histogram.pdf",  width=3.2, height=4)
+  hist <- getHistogram(si1)
+  pdf("./inst/st_theorem_si1_histogram.pdf",  width=3.2, height=4)
   par(mar=c(5, 4, 1, 1) + 0.1)
   barplot(unname(hist[1,]), cex.names=.75, ylab="Density", xlab="Comp. cost reduction (%)", 
           space=0, beside=T)
   axis(side=1,at=c(0,20,40,60,80,100))
   dev.off()
   
-  print("#SHC, N=3")
-  c2 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 3)
-  reset_stream(ds)
-  update(c2, ds, n=1000, use_outliers=T)
-  
-  hist <- getHistogram(c2)
-  pdf("./inst/st_theorem_shc2_histogram.pdf",  width=3.2, height=4)
+  hist <- getHistogram(si2)
+  pdf("./inst/st_theorem_si2_histogram.pdf",  width=3.2, height=4)
   par(mar=c(5, 4, 1, 1) + 0.1)
   barplot(unname(hist[1,]), cex.names=.75, ylab="Density", xlab="Comp. cost reduction (%)", 
           space=0, beside=T)
   axis(side=1,at=c(0,20,40,60,80,100))
   dev.off()
   
-  print("#SHC, N=4")
-  c3 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 4)
-  reset_stream(ds)
-  update(c3, ds, n=1000, use_outliers=T)
-  
-  hist <- getHistogram(c3)
-  pdf("./inst/st_theorem_shc3_histogram.pdf",  width=3.2, height=4)
+  hist <- getHistogram(si3)
+  pdf("./inst/st_theorem_si3_histogram.pdf",  width=3.2, height=4)
   par(mar=c(5, 4, 1, 1) + 0.1)
   barplot(unname(hist[1,]), cex.names=.75, ylab="Density", xlab="Comp. cost reduction (%)",
           space=0, beside=T)
@@ -196,48 +181,58 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex_Theorems <- function() {
   dev.off()
 }
 
-SHC_TestCase_Sensors_SigmaIndex <- function(endingRound = 2000) {
+SHC_TestCase_Sensors_SigmaIndex <- function(i,endingRound = 2000) {
   prepareSensorDataset()
   ds <- DSD_ReadCSV("./inst/datasets/sensors_final.csv", take=c(2:6), class=2, header=T)
   
-  print("Sensors SHC-sequential")
-  c1 <- DSC_SHC.man(4, 0.789, 0.617, compAssimilationCheckCounter = 1000, cbNLimit = 20, 
-                    driftRemoveCompSizeRatio = 0.166, driftCheckingSizeRatio = 0.732, 
-                    driftMovementMDThetaRatio = 0.258, decaySpeed = 31, recStats = T, 
-                    compFormingMinVVRatio = 0.476)
-  reset_stream(ds)
-  shc_res1 <- evaluate_cluster_with_callbacks(c1, ds, n = endingRound*1000, type="macro",
-                                              measure = c("cRand","queryTime", "updateTime", "processTime",
-                                                          "nodeCount", "computationCostReduction"),
-                                              callbacks = list(shc=SHCEvalCallback()), horizon = 1000,
-                                              verbose = T, use_outliers=T)
-  saveRDS(shc_res1, file="./inst/sensors_shc1.RDS")
+  if(missing(i) || i==1) {
+    print("Sensors SHC-sequential")
+    c1 <- DSC_SHC.man(4, 0.789, 0.617, compAssimilationCheckCounter = 1000, cbNLimit = 20, 
+                      driftRemoveCompSizeRatio = 0.166, driftCheckingSizeRatio = 0.732, 
+                      driftMovementMDThetaRatio = 0.258, decaySpeed = 31, recStats = T, 
+                      compFormingMinVVRatio = 0.476)
+    reset_stream(ds)
+    shc_res1 <- evaluate_cluster_with_callbacks(c1, ds, n = endingRound*1000, type="macro",
+                                                measure = c("cRand","queryTime", "updateTime", "processTime",
+                                                            "nodeCount", "computationCostReduction"),
+                                                callbacks = list(shc=SHCEvalCallback()), horizon = 1000,
+                                                verbose = T, use_outliers=T)
+    saveRDS(shc_res1, file="./inst/sensors_shc1.RDS")
+  }
   
-  print("Sensors SHC-index 1")
-  c2 <- DSC_SHC.man(4, 0.789, 0.617, compAssimilationCheckCounter = 1000, cbNLimit = 20, 
-                    driftRemoveCompSizeRatio = 0.166, driftCheckingSizeRatio = 0.732, 
-                    driftMovementMDThetaRatio = 0.258, decaySpeed = 31, recStats = T, 
-                    compFormingMinVVRatio = 0.476, sigmaIndex = T, sigmaIndexNeighborhood = 3)
-  reset_stream(ds)
-  shc_res2 <- evaluate_cluster_with_callbacks(c2, ds, n = endingRound*1000, type="macro",
-                                              measure = c("cRand","queryTime", "updateTime", "processTime",
-                                                          "nodeCount", "computationCostReduction"),
-                                              callbacks = list(shc=SHCEvalCallback()), horizon = 1000,
-                                              verbose = T, use_outliers=T)
-  saveRDS(shc_res2, file="./inst/sensors_shc2.RDS")
+  if(missing(i) || i==2) {
+    print("Sensors SHC-index 1")
+    c2 <- DSC_SHC.man(4, 0.789, 0.617, compAssimilationCheckCounter = 1000, cbNLimit = 20, 
+                      driftRemoveCompSizeRatio = 0.166, driftCheckingSizeRatio = 0.732, 
+                      driftMovementMDThetaRatio = 0.258, decaySpeed = 31, recStats = T, 
+                      compFormingMinVVRatio = 0.476, sigmaIndex = T, sigmaIndexNeighborhood = 3,
+                      sigmaIndexPrecisionSwitch = FALSE)
+    reset_stream(ds)
+    shc_res2 <- evaluate_cluster_with_callbacks(c2, ds, n = endingRound*1000, type="macro",
+                                                measure = c("cRand","queryTime", "updateTime", "processTime",
+                                                            "nodeCount", "computationCostReduction"),
+                                                callbacks = list(shc=SHCEvalCallback()), horizon = 1000,
+                                                verbose = T, use_outliers=T)
+    saveRDS(shc_res2, file="./inst/sensors_shc2.RDS")
+  }
   
-  print("Sensors SHC-index 2")
-  c3 <- DSC_SHC.man(4, 0.789, 0.617, compAssimilationCheckCounter = 1000, cbNLimit = 20, 
-                    driftRemoveCompSizeRatio = 0.166, driftCheckingSizeRatio = 0.732, 
-                    driftMovementMDThetaRatio = 0.258, decaySpeed = 31, recStats = T, 
-                    compFormingMinVVRatio = 0.476, sigmaIndex = T, sigmaIndexNeighborhood = 6)
-  reset_stream(ds)
-  shc_res3 <- evaluate_cluster_with_callbacks(c3, ds, n = endingRound*1000, type="macro",
-                                              measure = c("cRand","queryTime", "updateTime", "processTime",
-                                                          "nodeCount", "computationCostReduction"),
-                                              callbacks = list(shc=SHCEvalCallback()), horizon = 1000,
-                                              verbose = T, use_outliers=T)
-  saveRDS(shc_res3, file="./inst/sensors_shc3.RDS")
+  if(missing(i) || i==3) {
+    print("Sensors SHC-index 2")
+    c3 <- DSC_SHC.man(4, 0.789, 0.617, compAssimilationCheckCounter = 1000, cbNLimit = 20, 
+                      driftRemoveCompSizeRatio = 0.166, driftCheckingSizeRatio = 0.732, 
+                      driftMovementMDThetaRatio = 0.258, decaySpeed = 31, recStats = T, 
+                      compFormingMinVVRatio = 0.476, sigmaIndex = T, sigmaIndexNeighborhood = 6,
+                      sigmaIndexPrecisionSwitch = FALSE)
+    reset_stream(ds)
+    shc_res3 <- evaluate_cluster_with_callbacks(c3, ds, n = endingRound*1000, type="macro",
+                                                measure = c("cRand","queryTime", "updateTime", "processTime",
+                                                            "nodeCount", "computationCostReduction"),
+                                                callbacks = list(shc=SHCEvalCallback()), horizon = 1000,
+                                                verbose = T, use_outliers=T)
+    saveRDS(shc_res3, file="./inst/sensors_shc3.RDS")
+  }
+  
+  close_stream(ds)
 }
 
 SHC_TestCase_Sensors_SigmaIndex_Display <- function() {

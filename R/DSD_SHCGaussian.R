@@ -91,12 +91,12 @@ plot.DSD_SHCGaussianGenerator <- function(x, n = 500, ...) {
   d <- get_points(x, n, cluster = TRUE)
   assignment <- attr(d, "cluster")
   df <- cbind(d, c = assignment)
-  plot <- ggplot2::ggplot(df, ggplot2::aes_string(x="X1", y="X2", color=c)) +
+  p <- ggplot2::ggplot(df, ggplot2::aes_string(x="X1", y="X2", color="c")) +
     ggplot2::geom_point(shape = 1, size = 2.5, show.legend = FALSE, stroke = 1.5) +
     ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = ggplot2::element_blank(), 
                                          panel.grid.minor = ggplot2::element_blank(),
                                          axis.ticks = ggplot2::element_blank(), 
                                          axis.text = ggplot2::element_blank(), 
                                          axis.title = ggplot2::element_blank())
-  return(plot)
+  plot(p)
 }

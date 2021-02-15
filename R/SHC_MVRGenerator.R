@@ -402,6 +402,7 @@ SHC_MVRGenerator$methods(list(
   },
   
   generate = function(n = NA, regenerate = TRUE) {
+    message(paste0("generate stream, regenerate=",regenerate," n=",n))
     if(all(is.na(n)))
       if(totalPopulation>0)
         n <- totalPopulation

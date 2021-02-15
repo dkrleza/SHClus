@@ -5,7 +5,7 @@
 \usage{
 DSC_SHC.behavioral(dimensions,aggloType=AgglomerationType$NormalAgglomeration,
 driftType=DriftType$NormalDrift,decaySpeed=10,sharedAgglomerationThreshold=1,
-recStats=FALSE,sigmaIndex=FALSE,sigmaIndexNeighborhood=3,balancedSigmaIndex=FALSE)
+recStats=FALSE,sigmaIndex=FALSE,sigmaIndexNeighborhood=3,sigmaIndexPrecisionSwitch=TRUE)
 }
 \arguments{
 \item{dimensions}{(integer) - A number of space dimensions.}
@@ -16,7 +16,7 @@ recStats=FALSE,sigmaIndex=FALSE,sigmaIndexNeighborhood=3,balancedSigmaIndex=FALS
 \item{recStats}{(logical) - A flag that indicated whether the SH clusterer should return statistics about the number of components and outliers generated during values processing.}
 \item{sigmaIndex}{(logical) - A flag that indicates whether the SH clusterer should utilize the Sigma-index for speeing up the statistical space query.}
 \item{sigmaIndexNeighborhood}{(integer) - A multiplier for the statistical neighborhood used to manage Sigma-index. This multiplier is used in conjunction with SH clusterer statistical thershold theta - hereby determined by the \emph{aggloType} parameter.}
-\item{balancedSigmaIndex}{(logical) - A flag that indicates whether the Sigma-index balancing rule should be used.}
+\item{sigmaIndexPrecisionSwitch}{(logical) - A flag that indicates whether the Sigma-index should maintain precision over the speed.}
 }
 \section{Methods}{
 \describe{
@@ -55,7 +55,8 @@ The Statistical Hierachical Clusterer class.
 Instantiates an SHC \link[stream]{DSC} object that represents an extension of abstract classes in the stream package, namely \link[stream]{DSC_SinglePass}, \link[stream]{DSC_Outlier}, \link[stream]{DSC_Macro}, and \link[stream]{DSC_R}. This object can be used in all stream package methods.
 }
 \examples{
-d <- DSD_Gaussians(k=2,d=2,o=2,separation_type="Mahalanobis",outlier_horizon=10000,lim=c(0,15))
+d <- DSD_Gaussians(k=2,d=2,outliers=2,separation_type="Mahalanobis",separation=4,
+                   space_limit=c(0,15),outlier_options=list(outlier_horizon=10000))
 c <- DSC_SHC.behavioral(2,driftType = DriftType$NoDrift,decaySpeed = 0)
 update(c,d,n=10000)
 reset_stream(d)

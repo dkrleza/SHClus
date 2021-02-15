@@ -4,11 +4,12 @@
 \alias{prepareSensorDataset}
 \title{Sigma-Index Sensor Dataset Testing Procedures}
 \usage{
-SHC_TestCase_Sensors_SigmaIndex(endingRound = 2000)
+SHC_TestCase_Sensors_SigmaIndex(i, endingRound = 2000)
 SHC_TestCase_Sensors_SigmaIndex_Display()
 prepareSensorDataset()
 }
 \arguments{
+\item{i}{(integer) - A testing setting. Must be in \{1,2,3\}. If omitted, all settings are executed.}
 \item{endingRound}{(integer) - A number of data points processed from the sensor dataset in thousands, i.e., 2000 rounds = 2 million data points.}
 }
 \description{

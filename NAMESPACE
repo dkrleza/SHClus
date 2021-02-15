@@ -2,7 +2,7 @@ useDynLib(SHClus)
 importFrom("Rcpp", "evalCpp", "loadModule")
 importFrom("stream", "get_points", "reset_stream", "evaluate_callback", "get_assignment", "recheck_outlier", "get_microclusters", 
            "get_microweights", "get_macroclusters", "get_macroweights", "microToMacro", "get_outlier_positions", "clean_outliers",
-           "evaluate_with_callbacks", "DSD_ReadCSV", "evaluate_cluster_with_callbacks")
+           "evaluate_with_callbacks", "DSD_ReadCSV", "evaluate_cluster_with_callbacks", "close_stream")
 importFrom("grDevices", "dev.off", "pdf")
 importFrom("graphics", "axis", "barplot", "boxplot", "legend", "lines", "par")
 importFrom("methods", "new", "is")
@@ -28,7 +28,7 @@ export(
   "addDataPoints",
   "addDataPointsInc",
   "queryDataPoints",
-  "getTotalPopulationNumber",
+  "getTotalPopulations",
   "print",
   "getPopulations",
   "convertFromDSD",
@@ -61,7 +61,7 @@ S3method(addPopulation, SigmaIndex)
 S3method(addDataPoints, SigmaIndex)
 S3method(addDataPointsInc, SigmaIndex)
 S3method(queryDataPoints, SigmaIndex)
-S3method(getTotalPopulationNumber, SigmaIndex)
+S3method(getTotalPopulations, SigmaIndex)
 S3method(print, SigmaIndex)
 S3method(getPopulations, SigmaIndex)
 S3method(removePopulation, SigmaIndex)

@@ -76,13 +76,13 @@ public:
   }
   ~SHC_R() {
     if(shc_classifier!=NULL) delete shc_classifier;
-    Rcout << "deleting SHC classifier" << endl;
   }
   DataFrame processForR(DataFrame elements,bool classifyOnly) {
     Nullable<StringVector> l=elements.attr("cluster");
     NumericMatrix nm=Rcpp::internal::convert_using_rfunction(elements, "as.matrix");
     MatrixXd m=as<MatrixXd>(nm);
-    shared_ptr<vector<shared_ptr<ClassificationResult>>> res=shc_classifier->process(&m,classifyOnly);
+    tuple<shared_ptr<vector<shared_ptr<ClassificationResult>>>,shared_ptr<DeltaLogger>> res_tup=shc_classifier->process(&m,classifyOnly);
+    shared_ptr<vector<shared_ptr<ClassificationResult>>> res=get<shared_ptr<vector<shared_ptr<ClassificationResult>>>>(res_tup);
     //if(!classifyOnly) shc_classifier->pseudoOffline(true);
     StringVector clus,comps;
     IntegerVector clus_m,comps_m;
@@ -292,8 +292,8 @@ public:
     res["outliers"]=stats.second;
     return res;
   }
-  void useSigmaIndex(int neigh_multiplier, bool balanced) {
-    shc_classifier->useSigmaIndex(neigh_multiplier, balanced);
+  void useSigmaIndex(int neigh_multiplier, bool precision_switch) {
+    shc_classifier->useSigmaIndex(neigh_multiplier, precision_switch);
   }
   void setPseudoOfflineCounter(int agglo_count) {
     shc_classifier->setAgglomerationCount(agglo_count);

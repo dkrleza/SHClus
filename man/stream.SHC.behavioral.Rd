@@ -7,7 +7,7 @@
 \S4method{initialize}{stream.SHC}(dimensions,
   aggloType=AgglomerationType$NormalAgglomeration,driftType=DriftType$NormalDrift,
   decaySpeed=10,sharedAgglomerationThreshold=1,recStats=FALSE,sigmaIndex=FALSE,
-  sigmaIndexNeighborhood=3,balancedSigmaIndex=FALSE)
+  sigmaIndexNeighborhood=3,sigmaIndexPrecisionSwitch=TRUE)
 }
 \arguments{
 \item{dimensions}{(integer) - A number of space dimensions.}
@@ -18,7 +18,7 @@
 \item{recStats}{(logical) - A flag that indicated whether the SH clusterer should return statistics about the number of components and outliers generated during values processing.}
 \item{sigmaIndex}{(logical) - A flag that indicates whether the SH clusterer should utilize the Sigma-index for speeing up the statistical space query.}
 \item{sigmaIndexNeighborhood}{(integer) - A multiplier for the statistical neighborhood used to manage Sigma-index. This multiplier is used in conjunction with SH clusterer statistical thershold theta - hereby determined by the \emph{aggloType} parameter.}
-\item{balancedSigmaIndex}{(logical) - A flag that indicates whether the Sigma-index balancing rule should be used.}
+\item{sigmaIndexPrecisionSwitch}{(logical) - A flag that indicates whether the Sigma-index should maintain high precision over a speed.}
 }
 \section{Methods}{
 \describe{

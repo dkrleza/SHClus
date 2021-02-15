@@ -32,8 +32,9 @@ Dalibor Krleža
 }
 \examples{
 set.seed(0)
-d <- DSD_Gaussians(k = 3, d = 2, o = 5, separation_type = "Mahalanobis", outlier_horizon = 10000,
-      lim = c(0, 25), variance_lim = 1)
+d <- DSD_Gaussians(k = 3, d = 2, outliers = 5, separation_type = "Mahalanobis", 
+      separation = 4, space_limit = c(0, 25), variance_limit = 1,
+      outlier_options = list(outlier_horizon = 10000))
 c <- DSC_SHC.man(2, 3.2, 0.3, cbNLimit = 0, cbVarianceLimit = 0,decaySpeed = 0,
       sigmaIndex = TRUE)
 evaluate_with_callbacks(c, d, n = 10000, type = "macro", 

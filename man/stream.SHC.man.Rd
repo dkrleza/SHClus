@@ -11,7 +11,7 @@ driftRemoveCompSizeRatio=as.double(0.3),driftCheckingSizeRatio=as.double(1.3),
 driftMovementMDThetaRatio=as.double(0.8),decaySpeed=as.integer(10),
 sharedAgglomerationThreshold=as.integer(1),compFormingMinVVRatio=as.double(0.2),
 compBlockingLimitVVRatio=as.double(0.0),recStats=FALSE,sigmaIndex=FALSE,
-sigmaIndexNeighborhood=3,balancedSigmaIndex=FALSE)
+sigmaIndexNeighborhood=3,sigmaIndexPrecisionSwitch=TRUE)
 }
 \arguments{
 \item{dimensions}{(integer) - A number of space dimensions.}
@@ -32,7 +32,7 @@ sigmaIndexNeighborhood=3,balancedSigmaIndex=FALSE)
 \item{recStats}{(logical) - A flag that indicated whether the SH clusterer should return statistics about the number of components and outliers generated during values processing.}
 \item{sigmaIndex}{(logical) - A flag that indicates whether the SH clusterer should utilize the Sigma-index for speeing up the statistical space query.}
 \item{sigmaIndexNeighborhood}{(integer) - A multiplier for the statistical neighborhood used to manage Sigma-index. This multiplier is used in conjunction with SH clusterer statistical thershold theta - hereby determined by the \emph{theta} parameter.}
-\item{balancedSigmaIndex}{(logical) - A flag that indicates whether the Sigma-index balancing rule should be used.}
+\item{sigmaIndexPrecisionSwitch}{(logical) - A flag that indicates whether the Sigma-index should maintain precision over the speed.}
 }
 \section{Methods}{
 \describe{

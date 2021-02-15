@@ -11,7 +11,7 @@ RCPP_MODULE(SigmaIndexModule) {
   .method("addPopulation",&SigmaIndex_R::addPopulation,"Add a new population to the sigma-index")
   .method("addDataPoint",&SigmaIndex_R::addDataPoint,"Add a data point to an existing population in the sigma-index")
   .method("queryDataPoint",&SigmaIndex_R::queryDataPoint,"Query a data point in the sigma-index")
-  .method("getTotalPopulationNumber",&SigmaIndex_R::getTotalPopulationNumber,"Get total population number")
+  .method("getTotalPopulations",&SigmaIndex_R::getTotalPopulations,"Get total population number")
   .method("print",&SigmaIndex_R::print,"Printout the sigma-index")
   .method("getPopulations",&SigmaIndex_R::getPopulations,"Get all populations in the sigma-index")
   .method("removePopulation",&SigmaIndex_R::removePopulation,"Remove population")

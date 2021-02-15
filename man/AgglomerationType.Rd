@@ -15,15 +15,17 @@ Dalibor Krleža
 }
 \examples{
 set.seed(0)
-d <- DSD_Gaussians(k = 3, d = 2, o = 5, separation_type = "Mahalanobis", outlier_horizon = 10000,
-      lim = c(0, 50), variance_lim = 2, outlier_virtual_variance = 2, mahalanobis_separation = 6)
+d <- DSD_Gaussians(k = 3, d = 2, outliers = 5, separation_type = "Mahalanobis", 
+    separation = 6, space_limit = c(0, 50), variance_limit = 2,
+    outlier_options = list(outlier_horizon = 10000,outlier_virtual_variance = 2))
 c <- DSC_SHC.behavioral(2, aggloType = AgglomerationType$AggresiveAgglomeration, decaySpeed = 0, 
       sigmaIndex = TRUE)
 evaluate(c, d, n = 10000, type = "macro", measure = c("crand", "outlierjaccard"))
 
 set.seed(0)
-d <- DSD_Gaussians(k = 3, d = 2, o = 5, separation_type = "Mahalanobis", outlier_horizon = 10000,
-      lim = c(0, 50), variance_lim = 2, outlier_virtual_variance = 2, mahalanobis_separation = 6)
+d <- DSD_Gaussians(k = 3, d = 2, outliers = 5, separation_type = "Mahalanobis", 
+    separation = 6, space_limit = c(0, 50), variance_limit = 2,
+    outlier_options = list(outlier_horizon = 10000,outlier_virtual_variance = 2))
 c <- DSC_SHC.behavioral(2, aggloType = AgglomerationType$RelaxedAgglomeration, decaySpeed = 0, 
       sigmaIndex = TRUE)
 evaluate(c, d, n = 10000, type = "macro", measure = c("crand", "outlierjaccard"))

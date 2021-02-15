@@ -1,16 +1,16 @@
-SigmaIndex <- function(theta=3, neighborhood=9, balance=FALSE) {
+SigmaIndex <- function(theta=3, neighborhood=9, precision_switch=TRUE) {
   e1 <- new.env() # we need this to maintain the state of the stream generator
-  e1$RObj <- new(SigmaIndex_R,theta,neighborhood,balance)
+  e1$RObj <- new(SigmaIndex_R,theta,neighborhood,precision_switch)
   
   si <- list(description = "Sigma-Index", env = e1)
   class(si) <- c("SigmaIndex")
   si
 }
 
-convertFromDSD <- function(x, total_elements=500, theta=3, neighborhood=9, balance=FALSE) {
+convertFromDSD <- function(x, total_elements=500, theta=3, neighborhood=9, precision_switch=TRUE) {
   if(!"DSD_Gaussians" %in% class(x)) stop("Conversion from: [DSD_Gaussians] is currently supported")
   e1 <- new.env() # we need this to maintain the state of the stream generator
-  e1$RObj <- new(SigmaIndex_R,theta,neighborhood,balance)
+  e1$RObj <- new(SigmaIndex_R,theta,neighborhood,precision_switch)
   if(is(x, "DSD_Gaussians")) {
     els <- as.integer(total_elements / x$k)
     ix <- 1
@@ -96,9 +96,9 @@ queryDataPoints.SigmaIndex <- function(x, data_points, ...) {
   return(res)
 }
 
-getTotalPopulationNumber <- function(x, ...) UseMethod("getTotalPopulationNumber");
-getTotalPopulationNumber.SigmaIndex <- function(x, ...) {
-  x$env$RObj$getTotalPopulationNumber()
+getTotalPopulations <- function(x, ...) UseMethod("getTotalPopulations");
+getTotalPopulations.SigmaIndex <- function(x, ...) {
+  x$env$RObj$getTotalPopulations()
 }
 
 print <- function(x, ...) UseMethod("print");

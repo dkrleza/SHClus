@@ -8,13 +8,13 @@ stream.SHC <- setRefClass("stream.SHC",
                    methods = list(
                      initialize=function(dimensions,aggloType=AgglomerationType$NormalAgglomeration,driftType=DriftType$NormalDrift,
                                 decaySpeed=10,sharedAgglomerationThreshold=1,recStats=FALSE,sigmaIndex=FALSE,sigmaIndexNeighborhood=3,
-                                balancedSigmaIndex=FALSE) {
+                                sigmaIndexPrecisionSwitch=TRUE) {
                        recStats <<- recStats
                        stat_val <<- data.frame()
                        stat_idx <<- 1
                        shc <<- new(SHC_R,dimensions,aggloType,driftType,decaySpeed,sharedAgglomerationThreshold)
                        if(sigmaIndex) 
-                         shc$useSigmaIndex(sigmaIndexNeighborhood,balancedSigmaIndex)
+                         shc$useSigmaIndex(sigmaIndexNeighborhood,sigmaIndexPrecisionSwitch)
                      }
 ))
 
@@ -200,7 +200,7 @@ stream.SHC.man <- setRefClass("stream.SHC.man",
                                                       driftMovementMDThetaRatio=as.double(0.8),decaySpeed=as.integer(10),
                                                       sharedAgglomerationThreshold=as.integer(1),compFormingMinVVRatio=as.double(0.2),
                                                       compBlockingLimitVVRatio=as.double(0.0),recStats=FALSE,sigmaIndex=FALSE,
-                                                      sigmaIndexNeighborhood=3,balancedSigmaIndex=FALSE) {
+                                                      sigmaIndexNeighborhood=3,sigmaIndexPrecisionSwitch=TRUE) {
                                     recStats <<- recStats
                                     stat_val <<- data.frame()
                                     stat_idx <<- 1
@@ -214,15 +214,15 @@ stream.SHC.man <- setRefClass("stream.SHC.man",
                                                    componentBlockingLimitVVRatio=compBlockingLimitVVRatio)
                                     shc <<- new(SHC_R,params)
                                     if(sigmaIndex) 
-                                      shc$useSigmaIndex(sigmaIndexNeighborhood,balancedSigmaIndex)
+                                      shc$useSigmaIndex(sigmaIndexNeighborhood,sigmaIndexPrecisionSwitch)
                                   }
                                 ))
 
 DSC_SHC.behavioral <- function(dimensions,aggloType=AgglomerationType$NormalAgglomeration,
                                driftType=DriftType$NormalDrift,decaySpeed=10,sharedAgglomerationThreshold=1,
-                               recStats=FALSE,sigmaIndex=FALSE,sigmaIndexNeighborhood=3,balancedSigmaIndex=FALSE) {
+                               recStats=FALSE,sigmaIndex=FALSE,sigmaIndexNeighborhood=3,sigmaIndexPrecisionSwitch=TRUE) {
   x <- stream.SHC(dimensions,aggloType,driftType,decaySpeed,sharedAgglomerationThreshold,recStats,
-                  sigmaIndex,sigmaIndexNeighborhood,balancedSigmaIndex)
+                  sigmaIndex,sigmaIndexNeighborhood,sigmaIndexPrecisionSwitch)
   macro <- new.env()
   macro$theta <- x$shc$theta()
   macro$virtualVariance <- x$shc$virtualVariance()
@@ -243,12 +243,12 @@ DSC_SHC.man <- function(dimensions,theta,virtualVariance,parallelize=FALSE,perfo
                     driftMovementMDThetaRatio=as.double(0.8),decaySpeed=as.integer(10),
                     sharedAgglomerationThreshold=as.integer(1),compFormingMinVVRatio=as.double(0.2),
                     compBlockingLimitVVRatio=as.double(0.0),recStats=FALSE,sigmaIndex=FALSE,
-                    sigmaIndexNeighborhood=3,balancedSigmaIndex=FALSE) {
+                    sigmaIndexNeighborhood=3,sigmaIndexPrecisionSwitch=TRUE) {
   x <- stream.SHC.man(dimensions,theta,virtualVariance,parallelize,performSharedAgglomeration,
                       compAssimilationCheckCounter,cbVarianceLimit,cbNLimit,driftRemoveCompSizeRatio,driftCheckingSizeRatio,
                       driftMovementMDThetaRatio,decaySpeed,sharedAgglomerationThreshold,
                       compFormingMinVVRatio,compBlockingLimitVVRatio,recStats,sigmaIndex,
-                      sigmaIndexNeighborhood,balancedSigmaIndex)
+                      sigmaIndexNeighborhood,sigmaIndexPrecisionSwitch)
   macro <- new.env()
   macro$theta <- x$shc$theta()
   macro$virtualVariance <- x$shc$virtualVariance()

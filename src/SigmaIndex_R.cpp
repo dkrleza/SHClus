@@ -9,8 +9,8 @@ using namespace Eigen;
 
 class SigmaIndex_R : public SigmaIndex<ManualPopulation*> {
 public:
-  SigmaIndex_R(double theta, double neighborhood_theta, bool balanced=false) : 
-    SigmaIndex<ManualPopulation*>(theta, neighborhood_theta, balanced) {
+  SigmaIndex_R(double theta, double neighborhood_theta, bool precision_switch=true) : 
+    SigmaIndex<ManualPopulation*>(theta, neighborhood_theta, precision_switch) {
   }
   SigmaIndex_R() : SigmaIndex<ManualPopulation*>(3, 3, false) {
   }
@@ -70,7 +70,7 @@ public:
     List classified=List::create();
     for(pair<ManualPopulation*,double> it:*q_res->classified) 
       classified[it.first->getId()]=it.second;
-    res["classified"]=classified;
+    res["outcome"]=classified;
     List neigh=List::create();
     for(pair<ManualPopulation*,double> it:*q_res->neighborhood) 
       neigh[it.first->getId()]=it.second;
@@ -79,7 +79,7 @@ public:
     return res;
   }
   
-  int getTotalPopulationNumber() {
+  int getTotalPopulations() {
     return nodes.size();
   }
   

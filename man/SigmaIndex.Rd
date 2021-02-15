@@ -6,7 +6,7 @@
 \alias{addDataPoints}
 \alias{addDataPointsInc}
 \alias{queryDataPoints}
-\alias{getTotalPopulationNumber}
+\alias{getTotalPopulations}
 \alias{print}
 \alias{getPopulations}
 \alias{removePopulation}
@@ -15,13 +15,13 @@
 \alias{getStatistics}
 \title{Sigma-Index: a statistical indexing organizing structure}
 \usage{
-SigmaIndex(theta=3, neighborhood=9, balance=FALSE) 
-convertFromDSD(x, total_elements=500, theta=3, neighborhood=9, balance=FALSE) 
+SigmaIndex(theta=3, neighborhood=9, precision_switch=TRUE) 
+convertFromDSD(x, total_elements=500, theta=3, neighborhood=9, precision_switch=TRUE) 
 }
 \arguments{
 \item{theta}{(numeric) - A threshold that defines the bound of the statistical population. Used in statistical classification and inference.}
 \item{neighborhood}{(numeric) - A neighborhood statistical threshold, used to form the sigma-index DAG. Must be >\code{theta}.}
-\item{balance}{(logical) - Keep the sigma-index DAG balanced at all times.}
+\item{precision_switch}{(logical) - Keep the precision over the speed.}
 \item{x}{(DSD_Gaussians) - Gaussians data stream definition from the \pkg{stream} package. Gaussian definitions and outliers are used to covert to the Sigma-Index DAG. The same DSD can be used later to test the created Sigma-Index.}
 \item{total_elements}{(integer) - When converting a Sigma-Index DAG from DSD, we need to supply a total number of data points, to calculate population elements and numbers, since the Sigma-Index is probability structured.}
 }
@@ -42,7 +42,7 @@ Performs a query on the SigmaIndex object \code{x}. \code{data_points} parameter
     \item \code{classified} - a set of population identifiers for which a tested data point is closer (<=) than the \code{theta} threshold to the population centroid
     \item \code{neighborhood} - a set of popluations for which each tested data point is between \code{theta} and \code{neighborhood} thresholds. During this query call, SigmaIndex object is collecting computation cost reduction statistics.}
   }
-\item{\code{getTotalPopulationNumber(x, ...)}}{
+\item{\code{getTotalPopulations(x, ...)}}{
 Returns the number of populations in the SigmaIndex object \code{x}.}
 \item{\code{print(x, ...)}}{
 Prints details and structure of the SigmaIndex object \code{x}.}
@@ -78,7 +78,7 @@ The Sigma-Index statistical organizing structure.
 A Sigma-Index is a statistical organizing structure aiming to improve query and processing times for statistical algorithms, when searching space comprising statistical populations. Those interested in inspecting the Sigma-Index code, must start from the following units:
 \itemize{
   \item \code{SigmaIndex.hpp}, \code{SigmaIndex.cpp}, \code{SigmaIndex_Inline.cpp}, \code{SigmaIndexProxy.hpp}, and \code{SigmaIndexProxy.cpp} - C++ units comprising the Sigma-Index implementation suitable for the Statistical Hierachical Clusterer.
-  \item \code{SHC.cpp} - C++ unit that uses the Sigma-Index. After construction of the SHC object [1], we create and add a Sigma-Index using the \code{void useSigmaIndex(int neighborhood_mutiplier=2, bool balanced=false);} method. Each processing is done through the SHC method \code{shared_ptr<ClassificationResult> process(VectorXd *newElement, bool classifyOnly=false);}, which is the primary place for the Sigma-Index invocations.
+  \item \code{SHC.cpp} - C++ unit that uses the Sigma-Index. After construction of the SHC object [1], we create and add a Sigma-Index using the \code{void useSigmaIndex(int neighborhood_mutiplier=2, bool precision_switch=true);} method. Each processing is done through the SHC method \code{shared_ptr<ClassificationResult> process(VectorXd *newElement, bool classifyOnly=false);}, which is the primary place for the Sigma-Index invocations.
 }
 
 The Sigma-Index computational cost reduction is covered by three (3) distinct tests:
@@ -89,8 +89,9 @@ The Sigma-Index computational cost reduction is covered by three (3) distinct te
 }
 }
 \examples{ % must be 150
-d <- DSD_Gaussians(k=40,o=40,separation_type="Mahalanobis",lim=c(0,150),outlier_horizon=200000,
-                   variance_lim=4)
+d <- DSD_Gaussians(k=40,outliers=40,separation_type="Mahalanobis",separation=4,
+                   space_limit=c(0,150),variance_limit=4,
+                   outlier_options=list(outlier_horizon=200000))
 si <- convertFromDSD(d,200000,theta=3.2,neighborhood=12.9)
 res <- queryDataPoints(si, get_points(d, 200000))
 hist <- getHistogram(si)

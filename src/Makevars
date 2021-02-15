@@ -1,5 +1,5 @@
 PKG_CXXFLAGS = -I./SHC
-OBJECTS.SHC = SHC/SHC.o SHC/SHC_Component.o SHC/SHC_ComponentConnection.o SHC/SHC_Container.o SHC/SHC_Decay.o SHC/SHC_Utils.o SHC/SigmaIndex.o SHC/SigmaIndexProxy.o
+OBJECTS.SHC = SHC/SHC.o SHC/SHC_Component.o SHC/SHC_ComponentConnection.o SHC/SHC_Container.o SHC/SHC_Decay.o SHC/SHC_Utils.o SHC/SigmaIndex.o SHC/SigmaIndexProxy.o SHC/SHC_DeltaLogger.o
 OBJECTS.root = SHC_R.o SigmaIndex_R.o SHC_Module.o SigmaIndex_Module.o Utils.o RcppExports.o
 OBJECTS = $(OBJECTS.SHC) $(OBJECTS.root)
 CLEANEXTS = o a tmp
