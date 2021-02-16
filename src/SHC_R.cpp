@@ -81,8 +81,8 @@ public:
     Nullable<StringVector> l=elements.attr("cluster");
     NumericMatrix nm=Rcpp::internal::convert_using_rfunction(elements, "as.matrix");
     MatrixXd m=as<MatrixXd>(nm);
-    tuple<shared_ptr<vector<shared_ptr<ClassificationResult>>>,shared_ptr<DeltaLogger>> res_tup=shc_classifier->process(&m,classifyOnly);
-    shared_ptr<vector<shared_ptr<ClassificationResult>>> res=get<shared_ptr<vector<shared_ptr<ClassificationResult>>>>(res_tup);
+    pair<shared_ptr<vector<shared_ptr<ClassificationResult>>>,shared_ptr<DeltaLogger>> res_tup=shc_classifier->process(&m,classifyOnly);
+    shared_ptr<vector<shared_ptr<ClassificationResult>>> res=res_tup.first;
     //if(!classifyOnly) shc_classifier->pseudoOffline(true);
     StringVector clus,comps;
     IntegerVector clus_m,comps_m;
