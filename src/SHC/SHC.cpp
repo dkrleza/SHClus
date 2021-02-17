@@ -184,7 +184,7 @@ _int_cr SHC::classify_p1(bool classifyOnly,vector<pair<SHC_Component*,double>> *
         min_md=classified_map->at(0).second;
     }
     delete obsolete_map;
-    return _int_cr{.comp=min_comp,.neighborhood_map=neighborhood_map,.classified_map=classified_map,.min_md=min_md};
+    return _int_cr{min_comp,neighborhood_map,classified_map,min_md};
 }
 
 _int_cr SHC::classify(Eigen::VectorXd *newElement, bool classifyOnly, set<SHC_Component*> *excludeComponents) {
@@ -243,7 +243,7 @@ _int_cr SHC::classifySigmaIndex(Eigen::VectorXd *newElement, bool classifyOnly, 
             min_md=classified_map1->at(0).second;
         }
         delete obsolete_map;delete sigres->classified;delete sigres;
-        return _int_cr{.comp=min_comp,.neighborhood_map=neighborhood_map,.classified_map=classified_map1,.min_md=min_md};
+        return _int_cr{min_comp,neighborhood_map,classified_map1,min_md};
     } else throw SHC_Exception("Sigma index is not constructed, yet SHC want to use it :-S");
 }
 
