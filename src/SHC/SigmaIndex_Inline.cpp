@@ -360,7 +360,10 @@ void SigmaIndex<U>::_query(VectorXd *data,SigmaIndexNode<U> *node,SigmaIndexNode
     vector<SigmaIndexNode<U>*> l_neigh1,l_neigh2,*l_neigh=NULL;
     for(pair<string,SigmaIndexNode<U>*> ch_it:*node->getChildren()) { // we iterate through the node children
         if(!ch_it.second->results.visited) { // on each node we log whether it was already visited or not... if not the child node is not visited
+            std::chrono::time_point<std::chrono::system_clock> compst=std::chrono::system_clock::now();
             ch_it.second->results.md=ch_it.second->getPopulation()->mahalanobisDistance(data); // calculation for the child node
+            std::chrono::time_point<std::chrono::system_clock> compet=std::chrono::system_clock::now();
+            compTime+=std::chrono::duration_cast<std::chrono::microseconds>(compet-compst).count();
                 // notice that we store the distance on each node - this is what is considered for cache as well
             nodeCounter++; // increment the calculation counter - statistics
             if(!cached) { // if there is no cached data point, cache the one we are classifying now
@@ -381,7 +384,11 @@ void SigmaIndex<U>::_query(VectorXd *data,SigmaIndexNode<U> *node,SigmaIndexNode
     }
     for(pair<string,SigmaIndexNode<U>*> pa_it:*node->getParents()) { // iterate through parent nodes
         if(pa_it.first!=ROOT && !pa_it.second->results.visited) { // if the parent node is not ROOT and was not visited yet
+            std::chrono::time_point<std::chrono::system_clock> compst=std::chrono::system_clock::now();
             pa_it.second->results.md=pa_it.second->getPopulation()->mahalanobisDistance(data); // calculate the distance for the parent node
+            std::chrono::time_point<std::chrono::system_clock> compet=std::chrono::system_clock::now();
+            compTime+=std::chrono::duration_cast<std::chrono::microseconds>(compet-compst).count();
+            
             nodeCounter++; // increment the calculation counter - statistics
             if(!cached) { // if there is no cached data point, cache the one we are classifying now
                 cached=true;
@@ -606,6 +613,7 @@ void SigmaIndex<U>::resetStatistics() {
     this->tpCount=0;
     this->tsCount=0;
     this->totalSequential=0;
+    this->compTime=0;
 }
 
 /**
@@ -614,7 +622,7 @@ void SigmaIndex<U>::resetStatistics() {
  */
 template<class U>
 SigmaIndexStatistics *SigmaIndex<U>::getStatistics() {
-    return new SigmaIndexStatistics(nodeCounter,tpCount,tsCount,totalSequential);
+    return new SigmaIndexStatistics(nodeCounter,tpCount,tsCount,totalSequential,compTime);
 }
 
 /**

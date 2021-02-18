@@ -105,7 +105,11 @@ SHC::SHC(int dimensions,AgglomerationType aggloType,DriftType driftType,int deca
 
 void SHC::t1(SHC *shc, SHC_Component *comp, VectorXd *newElement, vector<pair<SHC_Component*,double>> *classified_map, vector<pair<SHC_Component*,double>> *neighborhood_map,
              vector<pair<SHC_Component*,double>> *obsolete_map, double theta) {
+    
+    std::chrono::time_point<std::chrono::system_clock> compst=std::chrono::system_clock::now();
     double md=comp->mahalanobisDistance(newElement);
+    std::chrono::time_point<std::chrono::system_clock> compet=std::chrono::system_clock::now();
+    shc->compTime+=std::chrono::duration_cast<std::chrono::microseconds>(compet-compst).count();
     shc->nodeCounter++;
     shc->m1.lock();
     if(comp->isObsolete() && md<=theta) obsolete_map->push_back(pair<SHC_Component*,double>(comp,md));
@@ -191,16 +195,15 @@ _int_cr SHC::classify(Eigen::VectorXd *newElement, bool classifyOnly, set<SHC_Co
     vector<pair<SHC_Component*,double>> *classified_map=new vector<pair<SHC_Component*,double>>(),
                                         *obsolete_map=new vector<pair<SHC_Component*,double>>(),
                                         *neighborhood_map=new vector<pair<SHC_Component*,double>>();
-    //vector<thread*> *workers=new vector<thread*>();
+    
+    std::chrono::time_point<std::chrono::system_clock> qst=std::chrono::system_clock::now();
     for(unordered_map<string,SHC_Component*>::iterator it=components.begin();it!=components.end();it++) {
         if(excludeComponents==NULL || excludeComponents->find(it->second)==excludeComponents->end()) {
-            /*if(parallelize) {
-                thread *t=new thread(&SHC::t1,this,it->second,newElement,classified_map,neighborhood_map,obsolete_map,theta);
-                workers->push_back(t);
-            } else*/
             SHC::t1(this,it->second,newElement,classified_map,neighborhood_map,obsolete_map,theta);
         }
     }
+    std::chrono::time_point<std::chrono::system_clock> qet=std::chrono::system_clock::now();
+    qTime+=std::chrono::duration_cast<std::chrono::microseconds>(qet-qst).count();
     return classify_p1(classifyOnly,obsolete_map,classified_map,neighborhood_map/*,workers*/);
 }
 
@@ -209,7 +212,11 @@ _int_cr SHC::classifySigmaIndex(Eigen::VectorXd *newElement, bool classifyOnly, 
                                         *obsolete_map=new vector<pair<SHC_Component*,double>>(),
                                         *neighborhood_map=NULL;
     if(sigma_index!=NULL) {
+        std::chrono::time_point<std::chrono::system_clock> qst=std::chrono::system_clock::now();
         SigmaIndexQueryResults<SHC_Component*> *sigres=sigma_index->query(newElement,excludeComponents,starting);
+        std::chrono::time_point<std::chrono::system_clock> qet=std::chrono::system_clock::now();
+        qTime+=std::chrono::duration_cast<std::chrono::microseconds>(qet-qst).count();
+        
         neighborhood_map=sigres->neighborhood;
         for(pair<SHC_Component*,double> it:*sigres->classified)
             if(it.first->isObsolete()) obsolete_map->push_back(it);
@@ -251,18 +258,17 @@ _int_cr SHC::classify(Eigen::VectorXd *newElement, SHC_Component *parentComponen
     vector<pair<SHC_Component*,double>> *classified_map=new vector<pair<SHC_Component*,double>>(),
                                         *obsolete_map=new vector<pair<SHC_Component*,double>>(),
                                         *neighborhood_map=new vector<pair<SHC_Component*,double>>();
-    //vector<thread*> *workers=new vector<thread*>();
+    
+    std::chrono::time_point<std::chrono::system_clock> qst=std::chrono::system_clock::now();
     unordered_map<string,SHC_Containable *> ccomps=parentComponent->fetchChildComponents();
     for(unordered_map<string,SHC_Containable *>::iterator it=ccomps.begin();it!=ccomps.end();it++) {
         if(typeid(it->second)==typeid(SHC_Component)) {
             SHC_Component *comp=static_cast<SHC_Component *>(it->second);
-            /*if(parallelize) {
-                thread *t=new thread(&SHC::t1,this,comp,newElement,classified_map,neighborhood_map,obsolete_map,theta);
-                workers->push_back(t);
-            } else */
             SHC::t1(this,comp,newElement,classified_map,neighborhood_map,obsolete_map,theta);
         }
     }
+    std::chrono::time_point<std::chrono::system_clock> qet=std::chrono::system_clock::now();
+    qTime+=std::chrono::duration_cast<std::chrono::microseconds>(qet-qst).count();
     return classify_p1(classifyOnly,obsolete_map,classified_map,neighborhood_map/*,workers*/);
 }
 
@@ -270,14 +276,13 @@ _int_cr SHC::classify(Eigen::VectorXd *newElement, vector<SHC_Component*> *forCo
     vector<pair<SHC_Component*,double>> *classified_map=new vector<pair<SHC_Component*,double>>(),
                                         *obsolete_map=new vector<pair<SHC_Component*,double>>(),
                                         *neighborhood_map=new vector<pair<SHC_Component*,double>>();
-    //vector<thread*> *workers=new vector<thread*>();
+    
+    std::chrono::time_point<std::chrono::system_clock> qst=std::chrono::system_clock::now();
     for(SHC_Component *comp:*forComponents) {
-        /*if(parallelize) {
-            thread *t=new thread(&SHC::t1,this,comp,newElement,classified_map,neighborhood_map,obsolete_map,theta);
-            workers->push_back(t);
-        } else */
         SHC::t1(this,comp,newElement,classified_map,neighborhood_map,obsolete_map,theta);
     }
+    std::chrono::time_point<std::chrono::system_clock> qet=std::chrono::system_clock::now();
+    qTime+=std::chrono::duration_cast<std::chrono::microseconds>(qet-qst).count();
     return classify_p1(classifyOnly,obsolete_map,classified_map,neighborhood_map/*,workers*/);
 }
 
@@ -298,56 +303,10 @@ shared_ptr<ClassificationResult> SHC::process(VectorXd *newElement, bool classif
         }
     }
     // Query
-    std::chrono::time_point<std::chrono::system_clock> qst=std::chrono::system_clock::now();
-/*    if(sigma_index) {
-        _int_cr t=classify(newElement, true); // should be removed
-        _int_cr t_si=classifySigmaIndex(newElement, true); // should be removed
-        for(pair<SHC_Component*,double> it:*t.classified_map) {
-            bool found=false;
-            for(pair<SHC_Component*,double> it2:*t_si.classified_map)
-                if(*it.first==*it2.first) {
-                    found=true;
-                    break;
-                }
-            if(!found) {
-                cout << "seq. " << it.first->getId() << " sd=" << it.second << " not found in SigmaIndex" << endl;
-                if(t_si.classified_map->size()>0) {
-                    for(pair<SHC_Component*,double> it2:*t_si.classified_map) {
-                        SHC_Component *x1=it2.first;
-                        SHC_Component *x2=it.first;
-                        double c_x1=x1->mahalanobisDistance(x2->getMean());
-                        double c_x2=x2->mahalanobisDistance(x1->getMean());
-                        cout << "   classified " << x1->getId() << " d1=(" << c_x1 << ") " << "d2=(" << c_x2 << ") " << endl;
-                    }
-                }
-                if(t_si.neighborhood_map->size()>0) {
-                    for(pair<SHC_Component*,double> it2:*t_si.neighborhood_map) {
-                        SHC_Component *x1=it2.first;
-                        SHC_Component *x2=it.first;
-                        double c_x1=x1->mahalanobisDistance(x2->getMean());
-                        double c_x2=x2->mahalanobisDistance(x1->getMean());
-                        cout << "   neighbor " << x1->getId() << " d1=(" << c_x1 << ") " << "d2=(" << c_x2 << ") " << endl;
-                    }
-                }
-                sigma_index->print(ROOT,cout);
-                _int_cr t_si2=classifySigmaIndex(newElement, true); // should be removed
-            }
-        }
-        for(pair<SHC_Component*,double> it:*t_si.classified_map) {
-            bool found=false;
-            for(pair<SHC_Component*,double> it2:*t.classified_map)
-                if(*it.first==*it2.first) {
-                    found=true;
-                    break;
-                }
-            if(!found) {
-                cout << "SI " << it.first->getId() << " sd=" << it.second << " not found in seq. scan" << endl;
-            }
-        }
-    }*/
+    //std::chrono::time_point<std::chrono::system_clock> qst=std::chrono::system_clock::now();
     _int_cr class_res=sigma_index==NULL ? classify(newElement, classifyOnly) : classifySigmaIndex(newElement, classifyOnly);
-    std::chrono::time_point<std::chrono::system_clock> qet=std::chrono::system_clock::now();
-    qTime+=std::chrono::duration_cast<std::chrono::microseconds>(qet-qst).count();
+    //std::chrono::time_point<std::chrono::system_clock> qet=std::chrono::system_clock::now();
+    //qTime+=std::chrono::duration_cast<std::chrono::microseconds>(qet-qst).count();
     
     shared_ptr<ClassificationResult> res=make_shared<ClassificationResult>();
     SHC_Component *comp=NULL;
@@ -364,7 +323,7 @@ shared_ptr<ClassificationResult> SHC::process(VectorXd *newElement, bool classif
             }
         }
         res->component_id=new string(comp->getId());
-        res->cluster_id=new string(comp->getParent()!=NULL ? comp->getParent()->getId() : NULL);
+        res->cluster_id=comp->getParent()!=NULL ? new string(comp->getParent()->getId()) : NULL;
     } else {
         if(!classifyOnly) {
             comp=new SHC_Component(containers,newElement,virtualVariance,cbVarianceLimit,cbNLimit,driftCheckingSizeRatio,
@@ -410,7 +369,7 @@ pair<shared_ptr<vector<shared_ptr<ClassificationResult>>>,shared_ptr<DeltaLogger
             delta=make_shared<DeltaLogger>();
         }
     }
-    qTime=0;uTime=0;
+    qTime=0;uTime=0;compTime=0;
     std::chrono::time_point<std::chrono::system_clock> pst=std::chrono::system_clock::now();
     if(sigma_index) sigma_index->resetStatistics();
     else this->nodeCounter=0;
@@ -427,7 +386,14 @@ pair<shared_ptr<vector<shared_ptr<ClassificationResult>>>,shared_ptr<DeltaLogger
     pTime=std::chrono::duration_cast<std::chrono::microseconds>(pet-pst).count();
     if(delta)
         for(pair<string,SHC_Component*> it:components) delta->finalizeComponent(it.second);
+    if(sigma_index) {
+        SigmaIndexStatistics *st=sigma_index->getStatistics();
+        compTime=st->compTime;
+        delete st;
+    }
 
+    cout << "computationTime(ms):" << (compTime/1000) << endl;
+    
     return make_pair(res,delta);
 }
 

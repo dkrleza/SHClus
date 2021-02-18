@@ -93,15 +93,16 @@ struct SigmaIndexStatistics {
     // tpCount - total populations within ntheta
     // tsCound - total populations outside ntheta - those that were "missed" in the previous queries
     // totalSequential - total number of populations for previous queries
-    long totalCount=0,tpCount=0,tsCount=0,totalSequential=0;
+    long totalCount=0,tpCount=0,tsCount=0,totalSequential=0,compTime=0;
     // R - computation cost reduction
     double R=0.0;
-    SigmaIndexStatistics(long totalCount,long tpCount,long tsCount,long totalSequential) {
+    SigmaIndexStatistics(long totalCount,long tpCount,long tsCount,long totalSequential,long compTime) {
         this->totalCount=totalCount;
         this->tpCount=tpCount;
         this->tsCount=tsCount;
         this->totalSequential=totalSequential;
         this->R=totalSequential>0 && totalCount<=totalSequential ? ((double)totalSequential-(double)totalCount)/(double)totalSequential : 0;
+        this->compTime=compTime;
     }
 };
 
@@ -124,7 +125,7 @@ class SigmaIndex {
 private:
     int c1=0,c2=0; // used as a counter in queries
     bool switch1=false; // precision switch 1
-    long nodeCounter=0,tpCount=0,tsCount=0,totalSequential=0; // statistics counters
+    long nodeCounter=0,tpCount=0,tsCount=0,totalSequential=0,compTime=0; // statistics counters
     double theta=3.0,ntheta=6.0; // statistical thresholds
     bool cached=false; // a flag that indicates that Sigma-Index has cached the last queried data point
     VectorXd *cachedData=NULL; // cached data point

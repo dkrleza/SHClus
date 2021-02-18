@@ -90,7 +90,7 @@ private:
     string deltaLoggingSourceName="master";
     bool parallelize=false,performSharedAgglomeration=true,cache=false,decay=true,cloned=false;
     int agglo_count,agglo_counter,decay_pace=10,sha_agglo_theta=1,entry=0;
-    long cbNLimit=40,qTime=0,nodeCounter=0,uTime=0,pTime=0;
+    long cbNLimit=40,qTime=0,nodeCounter=0,uTime=0,pTime=0,compTime=0;
     double theta=3.0,cbVarianceLimit=10.0;
     float driftRemoveCompSizeRatio=0.1,driftCheckingSizeRatio=1.0,driftMovementMDThetaRatio=1.0,componentFormingMinVVRatio=0.1,
         componentBlockingLimitVVRatio=0.0;
