@@ -8,7 +8,7 @@
 #include <memory>
 #include <iostream>
 #include "SHC_Component"
-#include <Eigen/Sparse>
+#include <Eigen/Dense>
 #include <cmath>
 #include "SigmaIndexProxy"
 using namespace std;
