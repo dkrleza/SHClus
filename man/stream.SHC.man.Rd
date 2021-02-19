@@ -2,6 +2,7 @@
 \name{stream.SHC.man-class}
 \alias{stream.SHC.man}
 \alias{initialize,stream.SHC.man-method}
+\alias{clearEigenMPSupport,stream.SHC.man-method}
 \title{Statistical Hierarchical Clusterer - reference class, manual construction}
 \usage{
 \S4method{initialize}{stream.SHC.man}(dimensions,theta,virtualVariance,parallelize=FALSE,
@@ -59,6 +60,9 @@ Can be used to re-check the outlier status for the supplied id. If the supplied 
 }
 \item{getTrace(id)}{
 Returns a list of current component identifiers that have trace back to the supplied component id. This method is used when we want to know new components to which are successors of the predecessor component that once had the supplied identifier. This method establishes direct temporal connection between the supplied component id and that returned list of current components.
+}
+\item{clearEigenMPSupport()}{
+  Clears the OpenMP usage by the Eigen linear algebra package. Introduced only for the reproducibility purposes.
 }
 }}
 \description{

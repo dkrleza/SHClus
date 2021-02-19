@@ -106,10 +106,10 @@ SHC::SHC(int dimensions,AgglomerationType aggloType,DriftType driftType,int deca
 void SHC::t1(SHC *shc, SHC_Component *comp, VectorXd *newElement, vector<pair<SHC_Component*,double>> *classified_map, vector<pair<SHC_Component*,double>> *neighborhood_map,
              vector<pair<SHC_Component*,double>> *obsolete_map, double theta) {
     
-    std::chrono::time_point<std::chrono::system_clock> compst=std::chrono::system_clock::now();
+    std::chrono::time_point<std::chrono::system_clock> qst=std::chrono::system_clock::now();
     double md=comp->mahalanobisDistance(newElement);
-    std::chrono::time_point<std::chrono::system_clock> compet=std::chrono::system_clock::now();
-    shc->compTime+=std::chrono::duration_cast<std::chrono::microseconds>(compet-compst).count();
+    std::chrono::time_point<std::chrono::system_clock> qet=std::chrono::system_clock::now();
+    shc->qTime+=std::chrono::duration_cast<std::chrono::microseconds>(qet-qst).count();
     shc->nodeCounter++;
     shc->m1.lock();
     if(comp->isObsolete() && md<=theta) obsolete_map->push_back(pair<SHC_Component*,double>(comp,md));
@@ -117,13 +117,6 @@ void SHC::t1(SHC *shc, SHC_Component *comp, VectorXd *newElement, vector<pair<SH
     else if(!comp->isObsolete() && md>theta && md<=(3*theta)) neighborhood_map->push_back(pair<SHC_Component*,double>(comp,md));
     shc->m1.unlock();
 }
-
-/*void SHC::t2(SHC *shc, SHC_Component *comp_from, SHC_Component *comp_to, vector<pair<string*,double*>> *res_map) {
-    double ed=comp_from->euclideanDistance(comp_to);
-    shc->m1.lock();
-    res_map->push_back(pair<string*,double*>(new string(comp_to->getId()), new double(ed)));
-    shc->m1.unlock();
-}*/
 
 double SHC::getTheta() {
     return theta;
@@ -196,14 +189,12 @@ _int_cr SHC::classify(Eigen::VectorXd *newElement, bool classifyOnly, set<SHC_Co
                                         *obsolete_map=new vector<pair<SHC_Component*,double>>(),
                                         *neighborhood_map=new vector<pair<SHC_Component*,double>>();
     
-    std::chrono::time_point<std::chrono::system_clock> qst=std::chrono::system_clock::now();
     for(unordered_map<string,SHC_Component*>::iterator it=components.begin();it!=components.end();it++) {
         if(excludeComponents==NULL || excludeComponents->find(it->second)==excludeComponents->end()) {
             SHC::t1(this,it->second,newElement,classified_map,neighborhood_map,obsolete_map,theta);
         }
     }
-    std::chrono::time_point<std::chrono::system_clock> qet=std::chrono::system_clock::now();
-    qTime+=std::chrono::duration_cast<std::chrono::microseconds>(qet-qst).count();
+    
     return classify_p1(classifyOnly,obsolete_map,classified_map,neighborhood_map/*,workers*/);
 }
 
@@ -212,10 +203,7 @@ _int_cr SHC::classifySigmaIndex(Eigen::VectorXd *newElement, bool classifyOnly, 
                                         *obsolete_map=new vector<pair<SHC_Component*,double>>(),
                                         *neighborhood_map=NULL;
     if(sigma_index!=NULL) {
-        std::chrono::time_point<std::chrono::system_clock> qst=std::chrono::system_clock::now();
         SigmaIndexQueryResults<SHC_Component*> *sigres=sigma_index->query(newElement,excludeComponents,starting);
-        std::chrono::time_point<std::chrono::system_clock> qet=std::chrono::system_clock::now();
-        qTime+=std::chrono::duration_cast<std::chrono::microseconds>(qet-qst).count();
         
         neighborhood_map=sigres->neighborhood;
         for(pair<SHC_Component*,double> it:*sigres->classified)
@@ -259,7 +247,6 @@ _int_cr SHC::classify(Eigen::VectorXd *newElement, SHC_Component *parentComponen
                                         *obsolete_map=new vector<pair<SHC_Component*,double>>(),
                                         *neighborhood_map=new vector<pair<SHC_Component*,double>>();
     
-    std::chrono::time_point<std::chrono::system_clock> qst=std::chrono::system_clock::now();
     unordered_map<string,SHC_Containable *> ccomps=parentComponent->fetchChildComponents();
     for(unordered_map<string,SHC_Containable *>::iterator it=ccomps.begin();it!=ccomps.end();it++) {
         if(typeid(it->second)==typeid(SHC_Component)) {
@@ -267,8 +254,7 @@ _int_cr SHC::classify(Eigen::VectorXd *newElement, SHC_Component *parentComponen
             SHC::t1(this,comp,newElement,classified_map,neighborhood_map,obsolete_map,theta);
         }
     }
-    std::chrono::time_point<std::chrono::system_clock> qet=std::chrono::system_clock::now();
-    qTime+=std::chrono::duration_cast<std::chrono::microseconds>(qet-qst).count();
+    
     return classify_p1(classifyOnly,obsolete_map,classified_map,neighborhood_map/*,workers*/);
 }
 
@@ -277,12 +263,10 @@ _int_cr SHC::classify(Eigen::VectorXd *newElement, vector<SHC_Component*> *forCo
                                         *obsolete_map=new vector<pair<SHC_Component*,double>>(),
                                         *neighborhood_map=new vector<pair<SHC_Component*,double>>();
     
-    std::chrono::time_point<std::chrono::system_clock> qst=std::chrono::system_clock::now();
     for(SHC_Component *comp:*forComponents) {
         SHC::t1(this,comp,newElement,classified_map,neighborhood_map,obsolete_map,theta);
     }
-    std::chrono::time_point<std::chrono::system_clock> qet=std::chrono::system_clock::now();
-    qTime+=std::chrono::duration_cast<std::chrono::microseconds>(qet-qst).count();
+    
     return classify_p1(classifyOnly,obsolete_map,classified_map,neighborhood_map/*,workers*/);
 }
 
@@ -303,10 +287,7 @@ shared_ptr<ClassificationResult> SHC::process(VectorXd *newElement, bool classif
         }
     }
     // Query
-    //std::chrono::time_point<std::chrono::system_clock> qst=std::chrono::system_clock::now();
     _int_cr class_res=sigma_index==NULL ? classify(newElement, classifyOnly) : classifySigmaIndex(newElement, classifyOnly);
-    //std::chrono::time_point<std::chrono::system_clock> qet=std::chrono::system_clock::now();
-    //qTime+=std::chrono::duration_cast<std::chrono::microseconds>(qet-qst).count();
     
     shared_ptr<ClassificationResult> res=make_shared<ClassificationResult>();
     SHC_Component *comp=NULL;
@@ -388,11 +369,9 @@ pair<shared_ptr<vector<shared_ptr<ClassificationResult>>>,shared_ptr<DeltaLogger
         for(pair<string,SHC_Component*> it:components) delta->finalizeComponent(it.second);
     if(sigma_index) {
         SigmaIndexStatistics *st=sigma_index->getStatistics();
-        compTime=st->compTime;
+        qTime=st->qTime;
         delete st;
     }
-
-    cout << "computationTime(ms):" << (compTime/1000) << endl;
     
     return make_pair(res,delta);
 }
@@ -1224,98 +1203,6 @@ string SHC::getDeltaLoggingSourceName() {
     return this->deltaLoggingSourceName;
 }
 
-/*void SHC::pseudoOffline(bool force) {
-    if(force || (agglo_count>0 && --agglo_counter<=0)) {
-        agglo_counter=agglo_count;
-        // do outlier consumption
-        //set<SHC_Component *> *obs_remove=new set<SHC_Component *>();
-        pair<set<string>*,set<string>*> co=getOutliersAndComponents();
-        set<string> *comps=co.first;
-        //set<string> *outs=co.second;
-        //cout << "Finalizing with " << comps->size() << " components and " << outs->size() << " outliers!" << endl;
-        //for(string comp_id:*comps) components[comp_id]->agglomerateNeighborhood(this);
-        for(string comp_id:*comps) {
-            SHC_Component *comp=components[comp_id];
-            // Let's try selecting with euclid's
-            vector<pair<SHC_Component*,double>> v1;
-            for(string out_id:*outs) {
-                SHC_Component *out=components[out_id];
-                v1.push_back(make_pair(out,out->euclideanDistance(comp)));
-            }
-            sort(v1.begin(),v1.end(),[=](pair<SHC_Component*,double>& a,pair<SHC_Component*,double>& b) {
-                return a.second<b.second;
-            });
-            vector<SHC_Component*> *test_list=new vector<SHC_Component*>();
-            for(unsigned i=0;i<(v1.size()>=2 ? 2 : v1.size());i++) test_list->push_back(v1[i].first);
-            _int_cr class_res=classify(comp->getMean(), test_list, true);
-            if(class_res.comp!=NULL) {
-                agglomerate(class_res.comp, comp);
-                outs->erase(class_res.comp->getId());
-            }
-            delete test_list;*/
-            
-            /*if(o->isObsolete()) obs_remove->insert(o);
-            else {
-                _int_cr class_res=classify(o->getMean(), true);
-                if(class_res.component_id) {
-                    agglomerate(*class_res.component_id, out_id);
-                    delete class_res.component_id;
-                }
-                if(class_res.agglo_component_id) delete class_res.agglo_component_id;
-            }*/
-        //}*/
-/*        set<SHC_Component *> *exclude=new set<SHC_Component *>();
-        for(string testing_comp_id:*comps) {
-            exclude->clear();
-            SHC_Component *test_comp=components[testing_comp_id];
-            exclude->insert(test_comp);
-            if(!test_comp->isObsolete()) {
-                // temp out for test
-                if(test_comp->isRedirected() && test_comp->getElements()<=0.2*test_comp->getRedirectedComponent()->getElements()) {
-                    SHC_Component *super_comp=test_comp->getRedirectedComponent();
-                    super_comp->setElements(super_comp->getElements()+test_comp->getElements());
-                    super_comp->addTrace(test_comp);
-                    removeComponent(test_comp);
-                } else if(!test_comp->isRedirected()) {
-                    _int_cr class_res=!sigma_index ? classify(test_comp->getMean(),true,exclude) : classifySigmaIndex(test_comp->getMean(),true,exclude,test_comp);
-                    if(class_res.comp && !class_res.comp->isBlocked()) {
-                        if(!class_res.comp->isOutlier() && test_comp->getElements()<class_res.comp->getElements()) {
-                            test_comp->redirectComponent(class_res.comp);
-                            agglomerate(test_comp, class_res.comp);
-                        }
-                    }
-                    //if(test_comp->isBlocked() && class_res.comp && !class_res.comp->isBlocked() && test_comp->getElements()<=class_res.comp->getElements())
-                    //    removeComponent(test_comp);
-                }
-            } else {
-                set<SHC_Component *> *ccomps=connections.getConnectedComponents(test_comp);
-                long telms=0;
-                bool remove=(ccomps->size()>0 ? false : true),all_neigh_obs=true;
-                if(!remove)
-                    for(SHC_Component *comp:*ccomps) {
-                        if(!comp->isObsolete()) {
-                            all_neigh_obs=false;
-                            telms+=comp->getElements();
-                            if(comp->hasBaseline()) {
-                                remove=true;
-                                break;
-                            }
-                        }
-                    }
-                if(!remove && all_neigh_obs) remove=true;
-                if(!remove && telms>driftRemoveCompSizeRatio*test_comp->getElements()) remove=true;
-                if(remove || obs_remove->find(test_comp)!=obs_remove->end()) {
-                    obs_remove->insert(test_comp);
-                    for(SHC_Component *comp:*ccomps) if(comp->isObsolete()) obs_remove->insert(comp);
-                }
-                delete ccomps;
-            }*/
-        //}
-        /*for(SHC_Component *oc:*obs_remove) {
-            string oc_id=oc->getId();
-            removeComponent(oc);
-            if(eventCallback!=NULL) eventCallback(new SHCEvent(AfterObsoleteComponentDeleted,oc_id));
-        }*/
-/*        delete exclude;delete comps;//delete outs;delete obs_remove;
-    }
-}*/
+void SHC::clearEigenMPSupport() {
+    Eigen::setNbThreads(0);
+}

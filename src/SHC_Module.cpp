@@ -35,5 +35,6 @@ RCPP_MODULE(SHCModule) {
     .method("recheckOutlier",&SHC_R::recheckOutlier,"Recheck outlier")
     .method("getOutlierPositions",&SHC_R::getOutlierPositions,"Get outlier positions")
     .method("getTrace",&SHC_R::getTrace,"Get component or outlier trace")
-    .method("cloneSHC",&SHC_R::cloneSHC,"SHC cloning interface");
+    .method("cloneSHC",&SHC_R::cloneSHC,"SHC cloning interface")
+    .method("clearEigenMPSupport",&SHC_R::clearEigenMPSupport,"Clear Eigen MP support");
 }

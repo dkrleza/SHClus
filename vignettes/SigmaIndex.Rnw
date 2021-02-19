@@ -998,21 +998,25 @@ shc_c$RObj$getComputationCostReduction()
 n <- 20000
 reset_stream(dsd)
 c1 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = FALSE)
+clearEigenMPSupport(c1)
 c1$RObj$setPseudoOfflineCounter(500)
 res1 <- evaluate_with_callbacks(c1, dsd, n=n, measure = c("cRand", "queryTime", "updateTime", "processTime","nodeCount",  "computationCostReduction","OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()),single_pass_update=T, use_outliers=T)
 
 reset_stream(dsd)
 c2 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 2)
+clearEigenMPSupport(c2)
 c2$RObj$setPseudoOfflineCounter(500)
 res2 <- evaluate_with_callbacks(c2, dsd, n=n, measure = c("cRand", "queryTime", "updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
 
 reset_stream(dsd)
 c3 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 3)
+clearEigenMPSupport(c3)
 c3$RObj$setPseudoOfflineCounter(500)
 res3 <- evaluate_with_callbacks(c3, dsd, n=n, measure = c("cRand", "queryTime","updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
 
 reset_stream(dsd)
 c4 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 4)
+clearEigenMPSupport(c4)
 c4$RObj$setPseudoOfflineCounter(500)
 res4 <- evaluate_with_callbacks(c4, dsd, n=n, measure = c("cRand", "queryTime","updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
 @
@@ -1044,11 +1048,11 @@ boxplot(df1, las=2, ylab="Corrected Rand", ylim=c(0,1), cex.names=.6, cex.axis=.
 @
 <<si-shc-qt,fig=TRUE,include=FALSE,echo=FALSE,width=1.3,height=2.5, pdf=FALSE, eps=FALSE, png=TRUE>>=
 par(mar=c(4, 3, 0.2, 0.2))
-df1 <- data.frame('SHC(seq.)'=res1$queryTime,'SHC(nm=2)'=res2$queryTime,
-'SHC(nm=3)'=res3$queryTime,'SHC(nm=4)'=res4$queryTime,check.names=F)
-mns <- colMeans(df1)
-df1 <- df1[,order(mns)]
-barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=.8, ylab="Query time (ms)", 
+q_max <- max(res1$queryTime,res2$queryTime,res3$queryTime,res4$queryTime)
+df1 <- data.frame('SHC(seq.)'=res1$queryTime/q_max,'SHC(nm=2)'=res2$queryTime/q_max,'SHC(nm=3)'=res3$queryTime/q_max,'SHC(nm=4)'=res4$queryTime/q_max,check.names=F)
+mns <- colSums(df1)
+df1 <- df1[,order(mns,decreasing=T)]
+barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=.8, ylab="Relative query time", 
         ylim=c(0,(max(mns)*1.1)), mgp=c(1.9,0.7,0))
 @
 <<si-shc-nc,fig=TRUE,include=FALSE,echo=FALSE,width=1.3,height=2.5, pdf=FALSE, eps=FALSE, png=TRUE>>=
@@ -1162,21 +1166,25 @@ evaluate(shc_c, dsd, n=20000, type="macro", measure=c("crand",
 n <- 20000
 reset_stream(dsd)
 c1 <- DSC_SHC.man(2, 3.2, 0.3, cbVarianceLimit = 0, cbNLimit = 0, decaySpeed = 0, sharedAgglomerationThreshold = 700, sigmaIndex = F)
+clearEigenMPSupport(c1)
 c1$RObj$setPseudoOfflineCounter(500)
 res1 <- evaluate_with_callbacks(c1, dsd, n=n, measure = c("cRand", "queryTime", "updateTime", "processTime","nodeCount",  "computationCostReduction","OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()),single_pass_update=T, use_outliers=T)
 
 reset_stream(dsd)
 c2 <- DSC_SHC.man(2, 3.2, 0.3, cbVarianceLimit = 0, cbNLimit = 0, decaySpeed = 0, sharedAgglomerationThreshold = 700, sigmaIndex = T, sigmaIndexNeighborhood = 2)
+clearEigenMPSupport(c2)
 c2$RObj$setPseudoOfflineCounter(500)
 res2 <- evaluate_with_callbacks(c2, dsd, n=n, measure = c("cRand", "queryTime", "updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
 
 reset_stream(dsd)
 c3 <- DSC_SHC.man(2, 3.2, 0.3, cbVarianceLimit = 0, cbNLimit = 0, decaySpeed = 0, sharedAgglomerationThreshold = 700, sigmaIndex = T, sigmaIndexNeighborhood = 3)
+clearEigenMPSupport(c3)
 c3$RObj$setPseudoOfflineCounter(500)
 res3 <- evaluate_with_callbacks(c3, dsd, n=n, measure = c("cRand", "queryTime","updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
 
 reset_stream(dsd)
 c4 <- DSC_SHC.man(2, 3.2, 0.3, cbVarianceLimit = 0, cbNLimit = 0, decaySpeed = 0, sharedAgglomerationThreshold = 700, sigmaIndex = T, sigmaIndexNeighborhood = 4)
+clearEigenMPSupport(c4)
 c4$RObj$setPseudoOfflineCounter(500)
 res4 <- evaluate_with_callbacks(c4, dsd, n=n, measure = c("cRand", "queryTime","updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
 @
@@ -1214,10 +1222,11 @@ boxplot(df1, las=2, ylab="Outlier Jaccard", ylim=c(0,1), cex.names=.6, cex.axis=
 @
 <<si-shc-qt2,fig=TRUE,include=FALSE,echo=FALSE,width=1.3,height=2.5,pdf=FALSE,eps=FALSE,png=TRUE>>=
 par(mar=c(4, 3, 0.2, 0.2),mgp=c(1.9,0.7,0))
-df1 <- data.frame('SHC(seq.)'=res1$queryTime,'SHC(nm=2)'=res2$queryTime,'SHC(nm=3)'=res3$queryTime,'SHC(nm=4)'=res4$queryTime,check.names=F)
-mns <- colMeans(df1)
-df1 <- df1[,order(mns)]
-barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=.8, ylab="Query time (ms)", ylim=c(0,(max(mns)*1.1)))
+q_max <- max(res1$queryTime,res2$queryTime,res3$queryTime,res4$queryTime)
+df1 <- data.frame('SHC(seq.)'=res1$queryTime/q_max,'SHC(nm=2)'=res2$queryTime/q_max,'SHC(nm=3)'=res3$queryTime/q_max,'SHC(nm=4)'=res4$queryTime/q_max,check.names=F)
+mns <- colSums(df1)
+df1 <- df1[,order(mns,decreasing=T)]
+barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=.8, ylab="Relative query time", ylim=c(0,(max(mns)*1.1)))
 @
 <<si-shc-ccr2,fig=TRUE,include=FALSE,echo=FALSE,width=1.3,height=2.5,pdf=FALSE,eps=FALSE,png=TRUE>>=
 par(mar=c(4, 3, 0.2, 0.2),mgp=c(1.5,0.7,0))

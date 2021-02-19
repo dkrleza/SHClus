@@ -1,9 +1,5 @@
 SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
   set.seed(1000)
-  #ds <- DSD_SHCGaussianGenerator(clusters = 50, outliers = 50, initPopulation = n, 
-  #                               cacheAndRepeat = TRUE, maxDimensionValues = c(80,80),
-  #                               regenerateWithOverflow = TRUE, theta = 2, 
-  #                               virtualVariance = 0.3)
 
   ds <- stream::DSD_Gaussians(k=50,outliers=50,separation_type="Mahalanobis",
                               separation=4,space_limit=c(0,150),variance_limit=8,
@@ -15,6 +11,7 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
   print("#SHC-sequential")
   c1 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = FALSE,
                            sharedAgglomerationThreshold = 100)
+  clearEigenMPSupport(c1)
   setPseudoOfflineCounter(c1,500)
   res1 <- evaluate_with_callbacks(c1, ds, n=n, measure = c("cRand","queryTime","updateTime",
                                                            "processTime","nodeCount",
@@ -27,6 +24,7 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
   print("#SHC-index1")
   c2 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 2,
                            sharedAgglomerationThreshold = 100)
+  clearEigenMPSupport(c1)
   setPseudoOfflineCounter(c2,500)
   res2 <- evaluate_with_callbacks(c2, ds, n=n, measure = c("cRand","queryTime","updateTime",
                                                            "processTime","nodeCount",
@@ -34,11 +32,11 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
                                   type="macro", callbacks=list(shc=SHCEvalCallback()), 
                                   single_pass_update=T, use_outliers=T)
   hist2 <- getHistogram(c2)
-  pdf("./inst/shc_idx1_histogram.pdf",  width=3.2, height=4)
-  par(mar=c(5, 4, 1, 1) + 0.1)
-  barplot(unname(hist2[1,]), cex.names=.75, ylab="Density", xlab="Comp. cost reduction (%)", 
+  pdf("./inst/shc_idx1_histogram.pdf", width=2.2, height=3)
+  par(mar=c(3, 3, 0.5, 0.5), mgp=c(1.5,0.5,0))
+  barplot(unname(hist2[1,]), cex.names=.7, cex.axis=.7, cex.lab=.8, ylab="Density", xlab="Comp. cost reduction (%)", 
           space=0, beside=T)
-  axis(side=1,at=c(0,20,40,60,80,100))
+  axis(side=1,at=c(0,20,40,60,80,100), cex.axis=.7)
   dev.off()
   
   reset_stream(ds)
@@ -46,6 +44,7 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
   print("#SHC-index2")
   c3 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 3,
                            sharedAgglomerationThreshold = 100)
+  clearEigenMPSupport(c1)
   setPseudoOfflineCounter(c3,500)
   res3 <- evaluate_with_callbacks(c3, ds, n=n, measure = c("cRand","queryTime","updateTime",
                                                            "processTime","nodeCount",
@@ -53,11 +52,11 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
                                   type="macro", callbacks=list(shc=SHCEvalCallback()), 
                                   single_pass_update=T, use_outliers=T)
   hist3 <- getHistogram(c3)
-  pdf("./inst/shc_idx2_histogram.pdf",  width=3.2, height=4)
-  par(mar=c(5, 4, 1, 1) + 0.1)
-  barplot(unname(hist3[1,]), cex.names=.75, ylab="Density", xlab="Comp. cost reduction (%)", 
+  pdf("./inst/shc_idx2_histogram.pdf",  width=2.2, height=3)
+  par(mar=c(3, 3, 0.5, 0.5), mgp=c(1.5,0.5,0))
+  barplot(unname(hist3[1,]), cex.names=.7, cex.axis=.7, cex.lab=.8, ylab="Density", xlab="Comp. cost reduction (%)", 
           space=0, beside=T)
-  axis(side=1,at=c(0,20,40,60,80,100))
+  axis(side=1,at=c(0,20,40,60,80,100), cex.axis=.7)
   dev.off()
   
   reset_stream(ds)
@@ -72,77 +71,77 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
                                   type="macro", callbacks=list(shc=SHCEvalCallback()), 
                                   single_pass_update=T, use_outliers=T)
   hist4 <- getHistogram(c4)
-  pdf("./inst/shc_idx3_histogram.pdf",  width=3.2, height=4)
-  par(mar=c(5, 4, 1, 1) + 0.1)
-  barplot(unname(hist4[1,]), cex.names=.75, ylab="Density", xlab="Comp. cost reduction (%)", 
+  pdf("./inst/shc_idx3_histogram.pdf",  width=2.2, height=3)
+  par(mar=c(3, 3, 0.5, 0.5), mgp=c(1.5,0.5,0))
+  barplot(unname(hist4[1,]), cex.names=.7, cex.axis=.7, cex.lab=.8, ylab="Density", xlab="Comp. cost reduction (%)", 
           space=0, beside=T)
-  axis(side=1,at=c(0,20,40,60,80,100))
+  axis(side=1,at=c(0,20,40,60,80,100), cex.axis=.7)
   dev.off()
   
-  pdf("./inst/st_clusout_crand.pdf",  width=3, height=4)
-  par(mar=c(6.8, 4, 1, 1) + 0.1)
-  df1 <- data.frame('SHC sequential'=res1$cRand,'SHC index 1'=res2$cRand,
+  pdf("./inst/st_clusout_crand.pdf",  width=1.3, height=2.5)
+  par(mar=c(4, 3, 0.2, 0.2), mgp=c(1.5,0.7,0))
+  df1 <- data.frame('SHC seq.'=res1$cRand,'SHC index 1'=res2$cRand,
                     'SHC index 2'=res3$cRand,'SHC index 3'=res4$cRand,check.names=F)
   mns <- colMeans(df1)
   df1 <- df1[,order(mns,decreasing=T)]
-  boxplot(df1, las=2, ylab="Corrected Rand", ylim=c(0,1))
+  boxplot(df1, las=2, ylab="Corrected Rand", ylim=c(0,1), cex.names=.6, cex.axis=.6, cex.lab=.8)
   dev.off()
   
-  pdf("./inst/st_clusout_oji.pdf",  width=3, height=4)
-  par(mar=c(6.8, 4, 1, 1) + 0.1)
-  df1 <- data.frame('SHC sequential'=res1$OutlierJaccard,'SHC index 1'=res2$OutlierJaccard,
+  pdf("./inst/st_clusout_oji.pdf",  width=1.3, height=2.5)
+  par(mar=c(4, 2.7, 0.2, 0.2), mgp=c(1.5,0.7,0))
+  df1 <- data.frame('SHC seq.'=res1$OutlierJaccard,'SHC index 1'=res2$OutlierJaccard,
                     'SHC index 2'=res3$OutlierJaccard,'SHC index 3'=res4$OutlierJaccard,check.names=F)
   mns <- colMeans(df1)
   df1 <- df1[,order(mns,decreasing=T)]
-  boxplot(df1, las=2, ylab="Outlier Jaccard", ylim=c(0,1))
+  boxplot(df1, las=2, ylab="Outlier Jaccard", ylim=c(0,1), cex.names=.6, cex.axis=.6, cex.lab=.8)
   dev.off()
   
-  pdf("./inst/st_clusout_querytimes.pdf",  width=1.5, height=2.5)
-  #png("./inst/st_clusout_querytimes.png",  width=1.5, height=2.5)
-  par(mar=c(4.2, 3, 0.2, 0.2))
-  df1 <- data.frame('SHC sequential'=res1$queryTime,'SHC index 1'=res2$queryTime,
-                    'SHC index 2'=res3$queryTime,'SHC index 3'=res4$queryTime,check.names=F)
+  pdf("./inst/st_clusout_rqt.pdf",  width=1.3, height=2.5)
+  qt_max <- max(res1$queryTime,res2$queryTime,res3$queryTime,res4$queryTime)
+  par(mar=c(4, 3, 0.2, 0.2), mgp=c(1.5,0.7,0))
+  df1 <- data.frame('SHC seq.'=res1$queryTime/qt_max,'SHC index 1'=res2$queryTime/qt_max,
+                    'SHC index 2'=res3$queryTime/qt_max,'SHC index 3'=res4$queryTime/qt_max,check.names=F)
   mns <- colMeans(df1)
   df1 <- df1[,order(mns)]
-  barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=0.8, ylab="Query time (ms)", 
-          ylim=c(0,(max(mns)*1.1)), mgp=c(1.9,0.7,0))
-  dev.off()
-  
-  pdf("./inst/st_clusout_nc.pdf",  width=3, height=4)
-  par(mar=c(6, 4, 1, 1) + 0.1)
-  df1 <- data.frame('SHC sequential'=res1$nodeCount,'SHC index 1'=res2$nodeCount,
-                    'SHC index 2'=res3$nodeCount,'SHC index 3'=res4$nodeCount,check.names=F)
-  mns <- colMeans(df1)
-  df1 <- df1[,order(mns)]
-  barplot(colMeans(df1), las=2, cex.names=.85, cex.axis=0.6, ylab="Nodes visited/calculated", 
+  barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=0.8, ylab="Relative query time", 
           ylim=c(0,(max(mns)*1.1)))
   dev.off()
   
-  pdf("./inst/st_clusout_ccr.pdf",  width=3, height=4)
-  par(mar=c(6, 4, 1, 1) + 0.1)
-  df1 <- data.frame('SHC sequential'=res1$computationCostReduction,'SHC index 1'=res2$computationCostReduction,
+  pdf("./inst/st_clusout_nc.pdf",  width=1.3, height=2.5)
+  par(mar=c(4, 3.5, 0.2, 0.2), mgp=c(2.6,0.7,0))
+  df1 <- data.frame('SHC seq.'=res1$nodeCount,'SHC index 1'=res2$nodeCount,
+                    'SHC index 2'=res3$nodeCount,'SHC index 3'=res4$nodeCount,check.names=F)
+  mns <- colMeans(df1)
+  df1 <- df1[,order(mns)]
+  barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=0.8, ylab="Nodes visited/calculated", 
+          ylim=c(0,(max(mns)*1.1)))
+  dev.off()
+  
+  pdf("./inst/st_clusout_ccr.pdf",  width=1.3, height=2.5)
+  par(mar=c(4, 3, 0.2, 0.2), mgp=c(1.5,0.7,0))
+  df1 <- data.frame('SHC seq.'=res1$computationCostReduction,'SHC index 1'=res2$computationCostReduction,
                     'SHC index 2'=res3$computationCostReduction,'SHC index 3'=res4$computationCostReduction,check.names=F)
   mns <- colMeans(df1)
   df1 <- df1[,order(mns)]
-  barplot(colMeans(df1), las=2, cex.names=.85, ylab="Comp. cost reduction (%)", ylim=c(0,(max(mns)*1.1)))
+  barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=0.8, ylab="Comp. cost reduction (%)", ylim=c(0,(max(mns)*1.1)))
   dev.off()
   
-  pdf("./inst/st_clusout_ut.pdf",  width=3, height=4)
-  par(mar=c(6, 4, 1, 1) + 0.1)
-  df1 <- data.frame('SHC sequential'=res1$updateTime,'SHC index 1'=res2$updateTime,
+  pdf("./inst/st_clusout_ut.pdf",  width=1.3, height=2.5)
+  par(mar=c(4, 3, 0.2, 0.2), mgp=c(1.5,0.7,0))
+  df1 <- data.frame('SHC seq.'=res1$updateTime,'SHC index 1'=res2$updateTime,
                     'SHC index 2'=res3$updateTime,'SHC index 3'=res4$updateTime,check.names=F)
   mns <- colMeans(df1)
   df1 <- df1[,order(mns,decreasing=T)]
-  barplot(colMeans(df1), las=2, cex.names=.85, ylab="Update time (ms)", ylim=c(0,(max(mns)*1.1)))
+  barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=0.8, ylab="Update time (ms)", ylim=c(0,(max(mns)*1.1)))
   dev.off()
   
-  pdf("./inst/st_clusout_pt.pdf",  width=3, height=4)
-  par(mar=c(6, 4, 1, 1) + 0.1)
-  df1 <- data.frame('SHC sequential'=res1$processTime,'SHC index 1'=res2$processTime,
+  pdf("./inst/st_clusout_pt.pdf",  width=1.3, height=2.5)
+  par(mar=c(4, 3, 0.2, 0.2), mgp=c(1.9,0.7,0))
+  df1 <- data.frame('SHC seq.'=res1$processTime,'SHC index 1'=res2$processTime,
                     'SHC index 2'=res3$processTime,'SHC index 3'=res4$processTime,check.names=F)
   mns <- colMeans(df1)
   df1 <- df1[,order(mns,decreasing=T)]
-  barplot(colMeans(df1), las=2, cex.names=.85, ylab="Processing time (ms)", ylim=c(0,(max(mns)*1.1)))
+  barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=0.8, ylab="Processing time (ms)", ylim=c(0,(max(mns)*1.1)))
   dev.off()
 }
 
@@ -157,27 +156,27 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex_Theorems <- function() {
   for(mu_n in names(mu)) addPopulation(si3,mu_n,mu[[mu_n]],sigma,200)
   
   hist <- getHistogram(si1)
-  pdf("./inst/st_theorem_si1_histogram.pdf",  width=3.2, height=4)
-  par(mar=c(5, 4, 1, 1) + 0.1)
-  barplot(unname(hist[1,]), cex.names=.75, ylab="Density", xlab="Comp. cost reduction (%)", 
+  pdf("./inst/st_theorem_si1_histogram.pdf", width=2.2, height=3)
+  par(mar=c(3, 3, 0.5, 0.5), mgp=c(1.5,0.5,0))
+  barplot(unname(hist[1,]), cex.names=.7, cex.axis=.7, cex.lab=.8, ylab="Density", xlab="Comp. cost reduction (%)", 
           space=0, beside=T)
-  axis(side=1,at=c(0,20,40,60,80,100))
+  axis(side=1,at=c(0,20,40,60,80,100), cex.axis=.7)
   dev.off()
   
   hist <- getHistogram(si2)
-  pdf("./inst/st_theorem_si2_histogram.pdf",  width=3.2, height=4)
-  par(mar=c(5, 4, 1, 1) + 0.1)
-  barplot(unname(hist[1,]), cex.names=.75, ylab="Density", xlab="Comp. cost reduction (%)", 
+  pdf("./inst/st_theorem_si2_histogram.pdf", width=2.2, height=3)
+  par(mar=c(3, 3, 0.5, 0.5), mgp=c(1.5,0.5,0))
+  barplot(unname(hist[1,]), cex.names=.7, cex.axis=.7, cex.lab=.8, ylab="Density", xlab="Comp. cost reduction (%)", 
           space=0, beside=T)
-  axis(side=1,at=c(0,20,40,60,80,100))
+  axis(side=1,at=c(0,20,40,60,80,100), cex.axis=.7)
   dev.off()
   
   hist <- getHistogram(si3)
-  pdf("./inst/st_theorem_si3_histogram.pdf",  width=3.2, height=4)
-  par(mar=c(5, 4, 1, 1) + 0.1)
-  barplot(unname(hist[1,]), cex.names=.75, ylab="Density", xlab="Comp. cost reduction (%)",
+  pdf("./inst/st_theorem_si3_histogram.pdf", width=2.2, height=3)
+  par(mar=c(3, 3, 0.5, 0.5), mgp=c(1.5,0.5,0))
+  barplot(unname(hist[1,]), cex.names=.7, cex.axis=.7, cex.lab=.8, ylab="Density", xlab="Comp. cost reduction (%)",
           space=0, beside=T)
-  axis(side=1,at=c(0,20,40,60,80,100))
+  axis(side=1,at=c(0,20,40,60,80,100), cex.axis=.7)
   dev.off()
 }
 
@@ -191,6 +190,7 @@ SHC_TestCase_Sensors_SigmaIndex <- function(i,endingRound = 2000) {
                       driftRemoveCompSizeRatio = 0.166, driftCheckingSizeRatio = 0.732, 
                       driftMovementMDThetaRatio = 0.258, decaySpeed = 31, recStats = T, 
                       compFormingMinVVRatio = 0.476)
+    clearEigenMPSupport(c1)
     reset_stream(ds)
     shc_res1 <- evaluate_cluster_with_callbacks(c1, ds, n = endingRound*1000, type="macro",
                                                 measure = c("cRand","queryTime", "updateTime", "processTime",
@@ -207,6 +207,7 @@ SHC_TestCase_Sensors_SigmaIndex <- function(i,endingRound = 2000) {
                       driftMovementMDThetaRatio = 0.258, decaySpeed = 31, recStats = T, 
                       compFormingMinVVRatio = 0.476, sigmaIndex = T, sigmaIndexNeighborhood = 3,
                       sigmaIndexPrecisionSwitch = FALSE)
+    clearEigenMPSupport(c2)
     reset_stream(ds)
     shc_res2 <- evaluate_cluster_with_callbacks(c2, ds, n = endingRound*1000, type="macro",
                                                 measure = c("cRand","queryTime", "updateTime", "processTime",
@@ -223,6 +224,7 @@ SHC_TestCase_Sensors_SigmaIndex <- function(i,endingRound = 2000) {
                       driftMovementMDThetaRatio = 0.258, decaySpeed = 31, recStats = T, 
                       compFormingMinVVRatio = 0.476, sigmaIndex = T, sigmaIndexNeighborhood = 6,
                       sigmaIndexPrecisionSwitch = FALSE)
+    clearEigenMPSupport(c3)
     reset_stream(ds)
     shc_res3 <- evaluate_cluster_with_callbacks(c3, ds, n = endingRound*1000, type="macro",
                                                 measure = c("cRand","queryTime", "updateTime", "processTime",

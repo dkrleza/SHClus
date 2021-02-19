@@ -1,6 +1,7 @@
 \docType{class}
 \name{DSC_SHC.man-class}
 \alias{DSC_SHC.man}
+\alias{clearEigenMPSupport,DSC_SHC.man-method}
 \title{Statistical Hierarchical Clusterer - manual construction}
 \usage{
 DSC_SHC.man(dimensions,theta,virtualVariance,parallelize=FALSE,
@@ -61,8 +62,11 @@ All methods here are detailed in the stream package.
   Returns a list of outliers and their positions.
 }
 \item{\code{recheck_outlier_positions(dsc, outlier_correlated_id, ...)}}{
-  Performs re-checking of the previously encountered outlier. An SHC outlier identifier must be supplied. Function returns TRUE when the outlier still stands (or decayed), or FALSE if it was assimilated by some component in the meantime.}
-}}
+  Performs re-checking of the previously encountered outlier. An SHC outlier identifier must be supplied. Function returns TRUE when the outlier still stands (or decayed), or FALSE if it was assimilated by some component in the meantime.
+}
+\item{\code{clearEigenMPSupport(dsc, ...)}}{
+  Clears the OpenMP usage by the Eigen linear algebra package. Introduced only for the reproducibility purposes.
+}}}
 \description{
 The Statistical Hierachical Clusterer class.
 }

@@ -177,6 +177,10 @@ stream.SHC$methods(list(
   
   getTrace=function(id,...) {
     return(shc$getTrace(id))
+  },
+  
+  clearEigenMPSupport=function() {
+    shc$clearEigenMPSupport();
   }
 ))
 
@@ -398,6 +402,15 @@ getHistogram.default <- function(x, ...) {
 }
 getHistogram.DSC_SHC <- function(x, ...) {
   x$RObj$getHistogram()
+}
+
+clearEigenMPSupport <- function(x) UseMethod("clearEigenMPSupport")
+clearEigenMPSupport.default <- function(x, ...) {
+  stop(gettextf("clearEigenMPSupport not implemented for class '%s'.",
+                paste(class(x), collapse=", ")))
+}
+clearEigenMPSupport.DSC_SHC <- function(x, ...) {
+  x$RObj$clearEigenMPSupport()
 }
 
 .shc_measures <- c("queryTime","updateTime","processTime","nodeCount","computationCostReduction")

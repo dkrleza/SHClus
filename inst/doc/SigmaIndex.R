@@ -313,26 +313,30 @@ shc_c$RObj$getComputationCostReduction()
 
 
 ###################################################
-### code chunk number 40: SigmaIndex.Rnw:997-1017
+### code chunk number 40: SigmaIndex.Rnw:997-1021
 ###################################################
 n <- 20000
 reset_stream(dsd)
 c1 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = FALSE)
+clearEigenMPSupport(c1)
 c1$RObj$setPseudoOfflineCounter(500)
 res1 <- evaluate_with_callbacks(c1, dsd, n=n, measure = c("cRand", "queryTime", "updateTime", "processTime","nodeCount",  "computationCostReduction","OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()),single_pass_update=T, use_outliers=T)
 
 reset_stream(dsd)
 c2 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 2)
+clearEigenMPSupport(c2)
 c2$RObj$setPseudoOfflineCounter(500)
 res2 <- evaluate_with_callbacks(c2, dsd, n=n, measure = c("cRand", "queryTime", "updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
 
 reset_stream(dsd)
 c3 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 3)
+clearEigenMPSupport(c3)
 c3$RObj$setPseudoOfflineCounter(500)
 res3 <- evaluate_with_callbacks(c3, dsd, n=n, measure = c("cRand", "queryTime","updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
 
 reset_stream(dsd)
 c4 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 4)
+clearEigenMPSupport(c4)
 c4$RObj$setPseudoOfflineCounter(500)
 res4 <- evaluate_with_callbacks(c4, dsd, n=n, measure = c("cRand", "queryTime","updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
 
@@ -379,11 +383,11 @@ boxplot(df1, las=2, ylab="Corrected Rand", ylim=c(0,1), cex.names=.6, cex.axis=.
 ### code chunk number 45: si-shc-qt
 ###################################################
 par(mar=c(4, 3, 0.2, 0.2))
-df1 <- data.frame('SHC(seq.)'=res1$queryTime,'SHC(nm=2)'=res2$queryTime,
-'SHC(nm=3)'=res3$queryTime,'SHC(nm=4)'=res4$queryTime,check.names=F)
-mns <- colMeans(df1)
-df1 <- df1[,order(mns)]
-barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=.8, ylab="Query time (ms)", 
+q_max <- max(res1$queryTime,res2$queryTime,res3$queryTime,res4$queryTime)
+df1 <- data.frame('SHC(seq.)'=res1$queryTime/q_max,'SHC(nm=2)'=res2$queryTime/q_max,'SHC(nm=3)'=res3$queryTime/q_max,'SHC(nm=4)'=res4$queryTime/q_max,check.names=F)
+mns <- colSums(df1)
+df1 <- df1[,order(mns,decreasing=T)]
+barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=.8, ylab="Relative query time", 
         ylim=c(0,(max(mns)*1.1)), mgp=c(1.9,0.7,0))
 
 
@@ -432,13 +436,13 @@ barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=.8, mgp=c(1.8,0
 
 
 ###################################################
-### code chunk number 50: SigmaIndex.Rnw:1132-1133
+### code chunk number 50: SigmaIndex.Rnw:1136-1137
 ###################################################
 set.seed(1000)
 
 
 ###################################################
-### code chunk number 51: SigmaIndex.Rnw:1135-1139
+### code chunk number 51: SigmaIndex.Rnw:1139-1143
 ###################################################
 dsd <- DSD_Gaussians(k=50,outliers=50,separation_type="Mahalanobis",
     separation=2,space_limit=c(0,90),variance_limit=8,
@@ -455,7 +459,7 @@ reset_stream(dsd)
 
 
 ###################################################
-### code chunk number 53: SigmaIndex.Rnw:1147-1150
+### code chunk number 53: SigmaIndex.Rnw:1151-1154
 ###################################################
 shc_c <- DSC_SHC.man(2, 3.2, 0.3, cbVarianceLimit = 0, cbNLimit = 0, 
 decaySpeed = 0, sharedAgglomerationThreshold = 700, sigmaIndex = T, 
@@ -463,39 +467,43 @@ sigmaIndexNeighborhood = 3)
 
 
 ###################################################
-### code chunk number 54: SigmaIndex.Rnw:1152-1153
+### code chunk number 54: SigmaIndex.Rnw:1156-1157
 ###################################################
 shc_c$RObj$setPseudoOfflineCounter(500)
 
 
 ###################################################
-### code chunk number 55: SigmaIndex.Rnw:1156-1158
+### code chunk number 55: SigmaIndex.Rnw:1160-1162
 ###################################################
 evaluate(shc_c, dsd, n=20000, type="macro", measure=c("crand",
 "outlierjaccard"), single_pass_update=T)
 
 
 ###################################################
-### code chunk number 56: SigmaIndex.Rnw:1161-1181
+### code chunk number 56: SigmaIndex.Rnw:1165-1189
 ###################################################
 n <- 20000
 reset_stream(dsd)
 c1 <- DSC_SHC.man(2, 3.2, 0.3, cbVarianceLimit = 0, cbNLimit = 0, decaySpeed = 0, sharedAgglomerationThreshold = 700, sigmaIndex = F)
+clearEigenMPSupport(c1)
 c1$RObj$setPseudoOfflineCounter(500)
 res1 <- evaluate_with_callbacks(c1, dsd, n=n, measure = c("cRand", "queryTime", "updateTime", "processTime","nodeCount",  "computationCostReduction","OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()),single_pass_update=T, use_outliers=T)
 
 reset_stream(dsd)
 c2 <- DSC_SHC.man(2, 3.2, 0.3, cbVarianceLimit = 0, cbNLimit = 0, decaySpeed = 0, sharedAgglomerationThreshold = 700, sigmaIndex = T, sigmaIndexNeighborhood = 2)
+clearEigenMPSupport(c2)
 c2$RObj$setPseudoOfflineCounter(500)
 res2 <- evaluate_with_callbacks(c2, dsd, n=n, measure = c("cRand", "queryTime", "updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
 
 reset_stream(dsd)
 c3 <- DSC_SHC.man(2, 3.2, 0.3, cbVarianceLimit = 0, cbNLimit = 0, decaySpeed = 0, sharedAgglomerationThreshold = 700, sigmaIndex = T, sigmaIndexNeighborhood = 3)
+clearEigenMPSupport(c3)
 c3$RObj$setPseudoOfflineCounter(500)
 res3 <- evaluate_with_callbacks(c3, dsd, n=n, measure = c("cRand", "queryTime","updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
 
 reset_stream(dsd)
 c4 <- DSC_SHC.man(2, 3.2, 0.3, cbVarianceLimit = 0, cbNLimit = 0, decaySpeed = 0, sharedAgglomerationThreshold = 700, sigmaIndex = T, sigmaIndexNeighborhood = 4)
+clearEigenMPSupport(c4)
 c4$RObj$setPseudoOfflineCounter(500)
 res4 <- evaluate_with_callbacks(c4, dsd, n=n, measure = c("cRand", "queryTime","updateTime", "processTime","nodeCount", "computationCostReduction", "OutlierJaccard"), type="macro", callbacks=list(shc=SHCEvalCallback()), single_pass_update=T, use_outliers=T)
 
@@ -551,10 +559,11 @@ boxplot(df1, las=2, ylab="Outlier Jaccard", ylim=c(0,1), cex.names=.6, cex.axis=
 ### code chunk number 62: si-shc-qt2
 ###################################################
 par(mar=c(4, 3, 0.2, 0.2),mgp=c(1.9,0.7,0))
-df1 <- data.frame('SHC(seq.)'=res1$queryTime,'SHC(nm=2)'=res2$queryTime,'SHC(nm=3)'=res3$queryTime,'SHC(nm=4)'=res4$queryTime,check.names=F)
-mns <- colMeans(df1)
-df1 <- df1[,order(mns)]
-barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=.8, ylab="Query time (ms)", ylim=c(0,(max(mns)*1.1)))
+q_max <- max(res1$queryTime,res2$queryTime,res3$queryTime,res4$queryTime)
+df1 <- data.frame('SHC(seq.)'=res1$queryTime/q_max,'SHC(nm=2)'=res2$queryTime/q_max,'SHC(nm=3)'=res3$queryTime/q_max,'SHC(nm=4)'=res4$queryTime/q_max,check.names=F)
+mns <- colSums(df1)
+df1 <- df1[,order(mns,decreasing=T)]
+barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=.8, ylab="Relative query time", ylim=c(0,(max(mns)*1.1)))
 
 
 ###################################################
@@ -579,7 +588,7 @@ barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=.8, ylab="Proce
 
 
 ###################################################
-### code chunk number 65: SigmaIndex.Rnw:1285-1290
+### code chunk number 65: SigmaIndex.Rnw:1294-1299
 ###################################################
 shc_res1 <- readRDS("sensors_shc1.RDS")
 shc_res2 <- readRDS("sensors_shc2.RDS")
@@ -674,7 +683,7 @@ barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=.8, ylab="Avg. 
 
 
 ###################################################
-### code chunk number 72: SigmaIndex.Rnw:1475-1483
+### code chunk number 72: SigmaIndex.Rnw:1484-1492
 ###################################################
 sigma <- matrix(data=c(1,0,0,1),nrow=2,ncol=2)
 mu <- list(P1=c(20,20), P2=c(27,20), P3=c(20,30), P4=c(5,20), P5=c(20,5))

@@ -339,4 +339,7 @@ public:
   SHC_R *cloneSHC() {
     return new SHC_R(this);
   }
+  void clearEigenMPSupport() {
+    shc_classifier->clearEigenMPSupport();
+  }
 };

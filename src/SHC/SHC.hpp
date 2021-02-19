@@ -173,6 +173,7 @@ public:
     void incDeltaElementsInDeltaLog(SHC_Component *comp,int number=1);
     void setDeltaLoggingSourceName(string s);
     string getDeltaLoggingSourceName();
+    void clearEigenMPSupport();
 };
 
 #endif /* SHC_hpp */

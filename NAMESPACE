@@ -35,7 +35,8 @@ export(
   "removePopulation",
   "resetStatistics",
   "getHistogram",
-  "getStatistics"
+  "getStatistics",
+  "clearEigenMPSupport"
 )
 
 S3method(get_points, DSD_SHCGaussianGenerator)
@@ -54,6 +55,7 @@ S3method(recheck_outlier, DSC_SHC)
 S3method(clean_outliers, DSC_SHC)
 S3method(plot, DSC_SHC)
 S3method(getHistogram, DSC_SHC)
+S3method(clearEigenMPSupport, DSC_SHC)
 
 S3method(evaluate_callback, SHCEvalCallback)
 
