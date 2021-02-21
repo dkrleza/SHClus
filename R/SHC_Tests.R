@@ -24,7 +24,7 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
   print("#SHC-index1")
   c2 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 2,
                            sharedAgglomerationThreshold = 100)
-  clearEigenMPSupport(c1)
+  clearEigenMPSupport(c2)
   setPseudoOfflineCounter(c2,500)
   res2 <- evaluate_with_callbacks(c2, ds, n=n, measure = c("cRand","queryTime","updateTime",
                                                            "processTime","nodeCount",
@@ -44,7 +44,7 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
   print("#SHC-index2")
   c3 <- DSC_SHC.behavioral(2, AgglomerationType$NormalAgglomeration, DriftType$NoDrift, 0, sigmaIndex = TRUE, sigmaIndexNeighborhood = 3,
                            sharedAgglomerationThreshold = 100)
-  clearEigenMPSupport(c1)
+  clearEigenMPSupport(c3)
   setPseudoOfflineCounter(c3,500)
   res3 <- evaluate_with_callbacks(c3, ds, n=n, measure = c("cRand","queryTime","updateTime",
                                                            "processTime","nodeCount",
@@ -101,6 +101,8 @@ SHC_TestCase_ClustersAndOutliers_SigmaIndex <- function(n=100000) {
   par(mar=c(4, 3, 0.2, 0.2), mgp=c(1.5,0.7,0))
   df1 <- data.frame('SHC seq.'=res1$queryTime/qt_max,'SHC index 1'=res2$queryTime/qt_max,
                     'SHC index 2'=res3$queryTime/qt_max,'SHC index 3'=res4$queryTime/qt_max,check.names=F)
+  #df1 <- data.frame('SHC seq.'=res1$queryTime,'SHC index 1'=res2$queryTime,
+  #                  'SHC index 2'=res3$queryTime,'SHC index 3'=res4$queryTime,check.names=F)
   mns <- colMeans(df1)
   df1 <- df1[,order(mns)]
   barplot(colMeans(df1), las=2, cex.names=.6, cex.axis=.6, cex.lab=0.8, ylab="Relative query time", 

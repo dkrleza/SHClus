@@ -1204,5 +1204,5 @@ string SHC::getDeltaLoggingSourceName() {
 }
 
 void SHC::clearEigenMPSupport() {
-    Eigen::setNbThreads(0);
+    Eigen::setNbThreads(1);
 }
